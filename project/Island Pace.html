@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Island Pace — UX/UI Design Direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1a1a; font-family: 'DM Sans', sans-serif; }
+  #root { width: 100%; height: 100%; }
+
+  /* ── Island Pace Design Tokens ── */
+  :root {
+    --ip-bg:        oklch(97.5% 0.006 80);
+    --ip-bg2:       oklch(95% 0.008 75);
+    --ip-surface:   oklch(99% 0.003 80);
+    --ip-border:    oklch(88% 0.01 75);
+    --ip-text:      oklch(14% 0.01 250);
+    --ip-text-2:    oklch(42% 0.015 240);
+    --ip-text-3:    oklch(62% 0.01 220);
+    --ip-accent:    oklch(62% 0.18 38);
+    --ip-accent-lt: oklch(94% 0.06 60);
+    --ip-green:     oklch(55% 0.14 148);
+    --ip-green-lt:  oklch(93% 0.05 148);
+    --ip-blue:      oklch(55% 0.14 248);
+    --ip-blue-lt:   oklch(93% 0.05 248);
+    --ip-radius:    8px;
+    --ip-radius-lg: 14px;
+    --ip-shadow:    0 1px 4px oklch(14% 0.01 250 / 0.07), 0 4px 16px oklch(14% 0.01 250 / 0.06);
+    --ip-shadow-lg: 0 4px 24px oklch(14% 0.01 250 / 0.12);
+  }
+
+  /* ── Shared screen styles ── */
+  .ip-screen {
+    background: var(--ip-bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ip-text);
+    width: 390px;
+    min-height: 844px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 0;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+    scrollbar-width: none;
+  }
+  .ip-screen::-webkit-scrollbar { display: none; }
+
+  /* ── Nav bar ── */
+  .ip-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 14px;
+    background: var(--ip-surface);
+    border-bottom: 1px solid var(--ip-border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .ip-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ip-text);
+  }
+  .ip-logo span { color: var(--ip-accent); }
+  .ip-nav-actions { display: flex; gap: 8px; align-items: center; }
+  .ip-nav-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--ip-text-2); font-size: 18px; padding: 4px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ip-nav-pill {
+    background: var(--ip-accent); color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 600;
+    padding: 6px 14px; border-radius: 20px; border: none;
+    cursor: pointer; letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  /* ── Badges ── */
+  .ip-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 4px;
+    letter-spacing: 0.02em; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .ip-badge-ride    { background: var(--ip-accent-lt); color: var(--ip-accent); }
+  .ip-badge-run     { background: var(--ip-blue-lt);   color: var(--ip-blue); }
+  .ip-badge-tri     { background: oklch(93% 0.05 310); color: oklch(48% 0.14 310); }
+  .ip-badge-social  { background: oklch(93% 0.04 180); color: oklch(42% 0.12 180); }
+  .ip-badge-coffee  { background: oklch(93% 0.06 55);  color: oklch(44% 0.14 55); }
+  .ip-badge-nodrop  { background: var(--ip-green-lt);  color: var(--ip-green); }
+  .ip-badge-tourist { background: oklch(93% 0.06 280); color: oklch(44% 0.14 280); }
+  .ip-badge-beginner{ background: var(--ip-green-lt);  color: var(--ip-green); }
+  .ip-badge-hard    { background: oklch(94% 0.06 20);  color: oklch(48% 0.18 20); }
+  .ip-badge-tag     { background: var(--ip-bg2); color: var(--ip-text-2); border: 1px solid var(--ip-border); }
+  .ip-badge-women   { background: oklch(93% 0.05 340); color: oklch(44% 0.14 340); }
+
+  /* ── Session cards ── */
+  .ip-card {
+    background: var(--ip-surface);
+    border: 1px solid var(--ip-border);
+    border-radius: var(--ip-radius-lg);
+    padding: 16px;
+    box-shadow: var(--ip-shadow);
+    transition: box-shadow 0.18s, transform 0.18s;
+    cursor: pointer;
+  }
+  .ip-card:hover {
+    box-shadow: var(--ip-shadow-lg);
+    transform: translateY(-1px);
+  }
+  .ip-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 8px; }
+  .ip-card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 19px; font-weight: 700;
+    line-height: 1.15;
+    color: var(--ip-text);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    flex: 1;
+  }
+  .ip-card-meta {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-bottom: 10px;
+  }
+  .ip-card-meta-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--ip-text-2);
+    flex-wrap: wrap;
+  }
+  .ip-card-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ip-border); flex-shrink: 0; }
+  .ip-card-stat {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 600;
+    color: var(--ip-text);
+  }
+  .ip-card-stat-label { font-size: 11px; color: var(--ip-text-3); font-weight: 400; }
+  .ip-card-stats-row { display: flex; gap: 16px; margin-bottom: 10px; padding: 10px 0; border-top: 1px solid var(--ip-border); border-bottom: 1px solid var(--ip-border); }
+  .ip-card-stat-block { display: flex; flex-direction: column; gap: 1px; }
+  .ip-card-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+  .ip-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+  .ip-card-organiser { display: flex; align-items: center; gap: 6px; }
+  .ip-card-avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--ip-accent-lt); 
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--ip-accent);
+  }
+  .ip-card-organiser-name { font-size: 12px; color: var(--ip-text-2); }
+  .ip-card-joining { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ip-text-3); }
+  .ip-card-joining strong { color: var(--ip-text); font-weight: 600; }
+
+  /* ── Date chip ── */
+  .ip-date-chip {
+    display: flex; flex-direction: column; align-items: center;
+    background: var(--ip-text); color: white;
+    border-radius: 8px; padding: 6px 10px; min-width: 44px;
+    flex-shrink: 0;
+  }
+  .ip-date-chip-day { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; line-height: 1; }
+  .ip-date-chip-dow { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; }
+
+  /* ── Section headers ── */
+  .ip-section-hd {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 20px 20px 12px;
+  }
+  .ip-section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .ip-section-link { font-size: 13px; color: var(--ip-accent); font-weight: 500; }
+
+  /* ── Buttons ── */
+  .ip-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    padding: 11px 20px; border-radius: 8px; border: none;
+    cursor: pointer; transition: opacity 0.15s, transform 0.12s;
+    white-space: nowrap;
+  }
+  .ip-btn:active { transform: scale(0.98); }
+  .ip-btn-primary { background: var(--ip-accent); color: white; }
+  .ip-btn-secondary { background: var(--ip-text); color: white; }
+  .ip-btn-outline { background: transparent; color: var(--ip-text); border: 1.5px solid var(--ip-border); }
+  .ip-btn-ghost { background: var(--ip-bg2); color: var(--ip-text-2); }
+  .ip-btn-full { width: 100%; }
+  .ip-btn-sm { font-size: 13px; padding: 8px 14px; }
+
+  /* ── Chip filters ── */
+  .ip-chips { display: flex; gap: 8px; padding: 12px 20px; overflow-x: auto; scrollbar-width: none; }
+  .ip-chips::-webkit-scrollbar { display: none; }
+  .ip-chip {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    padding: 7px 14px; border-radius: 20px;
+    border: 1.5px solid var(--ip-border);
+    background: var(--ip-surface); color: var(--ip-text-2);
+    white-space: nowrap; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ip-chip.active {
+    background: var(--ip-text); color: white; border-color: var(--ip-text);
+  }
+
+  /* ── Hero ── */
+  .ip-hero {
+    background: var(--ip-text);
+    padding: 32px 20px 28px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .ip-hero::before {
+    content: '';
+    position: absolute; top: -60px; right: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: var(--ip-accent);
+    opacity: 0.12;
+  }
+  .ip-hero-tag {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ip-accent);
+    margin-bottom: 10px;
+  }
+  .ip-hero-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 38px; font-weight: 800;
+    line-height: 1.05; text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 10px;
+  }
+  .ip-hero-title em { color: var(--ip-accent); font-style: normal; }
+  .ip-hero-sub {
+    font-size: 14px; color: oklch(80% 0.01 250);
+    line-height: 1.55; margin-bottom: 22px; max-width: 320px;
+  }
+  .ip-hero-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .ip-hero-btn-primary {
+    background: var(--ip-accent); color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    padding: 12px 22px; border-radius: 8px; border: none;
+    cursor: pointer;
+  }
+  .ip-hero-btn-secondary {
+    background: transparent; color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    padding: 12px 22px; border-radius: 8px;
+    border: 1.5px solid oklch(100% 0 0 / 0.25);
+    cursor: pointer;
+  }
+
+  /* ── Weekend pill ── */
+  .ip-weekend-band {
+    background: var(--ip-accent-lt);
+    border: 1px solid oklch(88% 0.08 50);
+    border-radius: 8px; margin: 0 20px 0;
+    padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .ip-weekend-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ip-accent);
+  }
+  .ip-weekend-count { font-size: 12px; color: var(--ip-accent); font-weight: 500; }
+
+  /* ── Stats bar ── */
+  .ip-stats-bar {
+    display: flex; gap: 0;
+    border: 1px solid var(--ip-border);
+    border-radius: var(--ip-radius);
+    background: var(--ip-surface);
+    margin: 0 20px;
+    overflow: hidden;
+  }
+  .ip-stat-item {
+    flex: 1; padding: 12px 8px; text-align: center;
+    border-right: 1px solid var(--ip-border);
+  }
+  .ip-stat-item:last-child { border-right: none; }
+  .ip-stat-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 24px; font-weight: 700; color: var(--ip-text);
+    display: block;
+  }
+  .ip-stat-lbl { font-size: 10px; font-weight: 500; color: var(--ip-text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ── Input / Form ── */
+  .ip-field { display: flex; flex-direction: column; gap: 5px; }
+  .ip-label { font-size: 12px; font-weight: 600; color: var(--ip-text-2); text-transform: uppercase; letter-spacing: 0.06em; }
+  .ip-input {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; color: var(--ip-text);
+    background: var(--ip-surface);
+    border: 1.5px solid var(--ip-border);
+    border-radius: var(--ip-radius);
+    padding: 11px 14px; outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .ip-input:focus { border-color: var(--ip-accent); }
+  .ip-input::placeholder { color: var(--ip-text-3); }
+  .ip-select {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; color: var(--ip-text);
+    background: var(--ip-surface);
+    border: 1.5px solid var(--ip-border);
+    border-radius: var(--ip-radius);
+    padding: 11px 14px; outline: none; width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+  .ip-toggle-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--ip-border);
+  }
+  .ip-toggle-label { font-size: 14px; color: var(--ip-text); font-weight: 500; }
+  .ip-toggle-sub { font-size: 12px; color: var(--ip-text-3); }
+  .ip-toggle {
+    width: 40px; height: 24px; border-radius: 12px;
+    background: var(--ip-green); border: none; cursor: pointer;
+    position: relative; flex-shrink: 0;
+  }
+  .ip-toggle::after {
+    content: ''; position: absolute; top: 2px; right: 2px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: white;
+  }
+  .ip-toggle.off { background: var(--ip-border); }
+  .ip-toggle.off::after { right: auto; left: 2px; }
+
+  /* ── Step indicator ── */
+  .ip-stepper { display: flex; align-items: center; gap: 0; padding: 16px 20px; }
+  .ip-step {
+    flex: 1; height: 3px; background: var(--ip-border);
+    position: relative; transition: background 0.3s;
+  }
+  .ip-step.done { background: var(--ip-accent); }
+  .ip-step.active { background: var(--ip-accent); }
+  .ip-step-gap { width: 8px; flex-shrink: 0; }
+  .ip-stepper-label { font-size: 12px; color: var(--ip-text-3); padding: 0 20px 12px; font-weight: 500; }
+  .ip-stepper-label strong { color: var(--ip-text); }
+
+  /* ── Detail sections ── */
+  .ip-detail-hero {
+    background: var(--ip-text); color: white;
+    padding: 24px 20px 20px;
+    position: relative; overflow: hidden;
+  }
+  .ip-detail-hero::after {
+    content: '';
+    position: absolute; bottom: -30px; right: -30px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: var(--ip-accent); opacity: 0.15;
+  }
+  .ip-detail-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 30px; font-weight: 800; text-transform: uppercase;
+    line-height: 1.08; letter-spacing: 0.02em; margin: 10px 0 6px;
+  }
+  .ip-detail-meta-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: oklch(75% 0.01 250); flex-wrap: wrap; }
+  .ip-detail-meta-dot { color: oklch(50% 0.01 250); }
+  .ip-quick-stats {
+    background: var(--ip-surface); border: 1px solid var(--ip-border);
+    border-radius: var(--ip-radius-lg); margin: 16px 20px 0;
+    overflow: hidden; box-shadow: var(--ip-shadow);
+  }
+  .ip-quick-stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+  .ip-qs-item { padding: 14px 12px; border-right: 1px solid var(--ip-border); text-align: center; }
+  .ip-qs-item:last-child { border-right: none; }
+  .ip-qs-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 26px; font-weight: 700; color: var(--ip-text); display: block;
+  }
+  .ip-qs-unit { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 500; color: var(--ip-text-3); }
+  .ip-qs-label { font-size: 10px; color: var(--ip-text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+  .ip-detail-section { padding: 16px 20px; border-bottom: 1px solid var(--ip-border); }
+  .ip-detail-section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--ip-text-2); margin-bottom: 12px;
+  }
+
+  /* ── Route placeholder ── */
+  .ip-route-placeholder {
+    background: var(--ip-bg2);
+    border: 1px solid var(--ip-border);
+    border-radius: var(--ip-radius);
+    height: 120px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .ip-route-placeholder-inner {
+    font-size: 11px; color: var(--ip-text-3); font-family: monospace; text-align: center; line-height: 1.6;
+  }
+  .ip-route-grid {
+    position: absolute; inset: 0;
+    background-image: 
+      linear-gradient(var(--ip-border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--ip-border) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.5;
+  }
+  .ip-route-path {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── Organiser card ── */
+  .ip-organiser-card {
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .ip-organiser-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--ip-accent-lt);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 700; color: var(--ip-accent);
+    flex-shrink: 0;
+  }
+  .ip-organiser-name { font-size: 15px; font-weight: 600; }
+  .ip-organiser-club { font-size: 13px; color: var(--ip-text-3); margin-top: 1px; }
+  .ip-contact-btns { display: flex; gap: 8px; margin-top: 10px; }
+
+  /* ── CTA strip ── */
+  .ip-cta-strip { padding: 16px 20px; display: flex; gap: 8px; background: var(--ip-surface); border-top: 1px solid var(--ip-border); position: sticky; bottom: 0; }
+
+  /* ── Calendar event dot ── */
+  .ip-cal-event { 
+    background: var(--ip-surface); border: 1px solid var(--ip-border);
+    border-radius: var(--ip-radius); padding: 12px 14px;
+    display: flex; gap: 12px; align-items: flex-start;
+    box-shadow: var(--ip-shadow);
+  }
+  .ip-cal-date { 
+    min-width: 44px; text-align: center;
+    background: var(--ip-text); color: white; border-radius: 8px;
+    padding: 6px 8px;
+  }
+  .ip-cal-d { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 800; line-height: 1; display: block; }
+  .ip-cal-m { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; }
+  .ip-cal-body { flex: 1; }
+  .ip-cal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+  .ip-cal-meta { font-size: 12px; color: var(--ip-text-3); margin-top: 3px; }
+  .ip-cal-badge { margin-top: 6px; }
+
+  /* ── Club cards ── */
+  .ip-club-card {
+    background: var(--ip-surface); border: 1px solid var(--ip-border);
+    border-radius: var(--ip-radius-lg); padding: 14px;
+    display: flex; gap: 12px; align-items: center;
+    box-shadow: var(--ip-shadow);
+  }
+  .ip-club-logo {
+    width: 48px; height: 48px; border-radius: 10px;
+    background: var(--ip-text); display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800;
+    color: white; flex-shrink: 0;
+  }
+  .ip-club-name { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+  .ip-club-meta { font-size: 12px; color: var(--ip-text-3); margin-top: 2px; }
+  .ip-club-stats { display: flex; gap: 12px; margin-top: 6px; }
+  .ip-club-stat { font-size: 12px; color: var(--ip-text-2); font-weight: 500; }
+  .ip-club-stat strong { font-weight: 700; color: var(--ip-text); }
+
+  /* ── Concept B overrides ── */
+  .concept-b {
+    --ip-bg: oklch(96% 0.01 240);
+    --ip-bg2: oklch(92% 0.015 240);
+    --ip-surface: oklch(100% 0 0);
+    --ip-text: oklch(12% 0.02 240);
+    --ip-accent: oklch(55% 0.22 148);
+    --ip-accent-lt: oklch(92% 0.07 148);
+  }
+  .concept-b .ip-hero { background: linear-gradient(135deg, oklch(30% 0.12 240) 0%, oklch(20% 0.08 280) 100%); }
+  .concept-b .ip-logo { letter-spacing: 0.08em; }
+  .concept-b .ip-card-title { font-size: 17px; font-weight: 700; }
+  .concept-b .ip-section-title { font-size: 18px; }
+
+  /* ── Style guide section ── */
+  .sg-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.04em; margin-bottom: 6px;
+    color: oklch(14% 0.01 250);
+  }
+  .sg-swatch { 
+    width: 60px; height: 60px; border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+  .sg-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #666; margin-top: 5px; text-align: center; }
+  .sg-value { font-size: 9px; color: #999; text-align: center; font-family: monospace; }
+  .sg-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .sg-font-demo { font-family: 'Barlow Condensed', sans-serif; font-size: 48px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1; }
+  .sg-body-demo { font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.55; }
+  .sg-section { margin-bottom: 24px; }
+  .sg-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+/* ──────────────────────────────────────────────
+   SHARED COMPONENTS
+────────────────────────────────────────────── */
+
+function Nav({ title, back = false, rightSlot }) {
+  return (
+    <div className="ip-nav">
+      {back ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button className="ip-nav-btn" style={{ fontSize: 20, marginLeft: -4 }}>←</button>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>{title}</span>
+        </div>
+      ) : (
+        <div className="ip-logo">ISLAND<span>PACE</span></div>
+      )}
+      <div className="ip-nav-actions">
+        {rightSlot || <><button className="ip-nav-btn">🔍</button><button className="ip-nav-pill">+ Submit</button></>}
+      </div>
+    </div>
+  );
+}
+
+function Badge({ type, children }) {
+  return <span className={`ip-badge ip-badge-${type}`}>{children}</span>;
+}
+
+function SessionCard({ title, type, date, location, km, pace, difficulty, organiser, joining, tags = [], accent }) {
+  return (
+    <div className="ip-card" style={{ marginBottom: 12 }}>
+      <div className="ip-card-header">
+        <div className="ip-card-title">{title}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="ip-date-chip">
+            <span className="ip-date-chip-day">{date.day}</span>
+            <span className="ip-date-chip-dow">{date.dow}</span>
+          </div>
+          <span style={{ fontSize: 11, color: 'var(--ip-text-3)', marginTop: 4 }}>{date.time}</span>
+        </div>
+      </div>
+      <div className="ip-card-meta">
+        <div className="ip-card-meta-row">
+          <Badge type={type === 'Ride' ? 'ride' : type === 'Run' ? 'run' : 'tri'}>{type}</Badge>
+          <span className="ip-card-dot"></span>
+          <span>{location}</span>
+        </div>
+      </div>
+      <div className="ip-card-stats-row">
+        <div className="ip-card-stat-block">
+          <span className="ip-card-stat">{km}</span>
+          <span className="ip-card-stat-label">km</span>
+        </div>
+        <div className="ip-card-stat-block">
+          <span className="ip-card-stat">{pace}</span>
+          <span className="ip-card-stat-label">avg speed</span>
+        </div>
+        <div className="ip-card-stat-block">
+          <span className="ip-card-stat" style={{ color: difficulty === 'Hard' ? 'oklch(48% 0.18 20)' : difficulty === 'Social' ? 'var(--ip-green)' : 'var(--ip-text)' }}>{difficulty}</span>
+          <span className="ip-card-stat-label">level</span>
+        </div>
+      </div>
+      <div className="ip-card-badges">
+        {tags.map(t => <Badge key={t.label} type={t.type}>{t.label}</Badge>)}
+      </div>
+      <div className="ip-card-footer">
+        <div className="ip-card-organiser">
+          <div className="ip-card-avatar">{organiser[0]}</div>
+          <span className="ip-card-organiser-name">{organiser}</span>
+        </div>
+        <div className="ip-card-joining">
+          <strong>{joining}</strong>&nbsp;joining
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   SCREEN 1 — HOMEPAGE
+────────────────────────────────────────────── */
+function HomeScreen() {
+  return (
+    <div className="ip-screen">
+      <Nav />
+
+      {/* Hero */}
+      <div className="ip-hero">
+        <div className="ip-hero-tag">Sri Lanka · May 2026</div>
+        <div className="ip-hero-title">Find Your Next<br/><em>Ride or Run</em><br/>in Sri Lanka.</div>
+        <div className="ip-hero-sub">Coffee rides, long runs, training sessions, casual meetups, and endurance events across the island.</div>
+        <div className="ip-hero-btns">
+          <button className="ip-hero-btn-primary">Explore Sessions</button>
+          <button className="ip-hero-btn-secondary">Submit a Ride</button>
+        </div>
+      </div>
+
+      {/* This weekend band */}
+      <div style={{ padding: '16px 0 12px' }}>
+        <div className="ip-weekend-band">
+          <div>
+            <div className="ip-weekend-label">↗ This Weekend</div>
+            <div style={{ fontSize: 11, color: 'var(--ip-accent)', marginTop: 2 }}>Sat 3 May — Sun 4 May</div>
+          </div>
+          <div className="ip-weekend-count">8 sessions nearby</div>
+        </div>
+      </div>
+
+      {/* Stats bar */}
+      <div className="ip-stats-bar">
+        <div className="ip-stat-item">
+          <span className="ip-stat-num">24</span>
+          <span className="ip-stat-lbl">This week</span>
+        </div>
+        <div className="ip-stat-item">
+          <span className="ip-stat-num">6</span>
+          <span className="ip-stat-lbl">Clubs</span>
+        </div>
+        <div className="ip-stat-item">
+          <span className="ip-stat-num">3</span>
+          <span className="ip-stat-lbl">Cities</span>
+        </div>
+      </div>
+
+      {/* Coffee rides & Social runs */}
+      <div className="ip-section-hd">
+        <div className="ip-section-title">☕ Coffee Rides</div>
+        <a className="ip-section-link">See all →</a>
+      </div>
+      <div style={{ padding: '0 20px' }}>
+        <SessionCard
+          title="Colombo Coffee Loop"
+          type="Ride"
+          date={{ day: '03', dow: 'SAT', time: '6:00 AM' }}
+          location="Colombo 7"
+          km="42"
+          pace="25–28 km/h"
+          difficulty="Social"
+          organiser="Colombo Cycling Club"
+          joining="12"
+          tags={[{ type: 'nodrop', label: 'No Drop' }, { type: 'coffee', label: 'Coffee Stop' }]}
+        />
+        <SessionCard
+          title="Galle Face Sunrise Roll"
+          type="Ride"
+          date={{ day: '04', dow: 'SUN', time: '5:45 AM' }}
+          location="Fort, Colombo"
+          km="28"
+          pace="22–25 km/h"
+          difficulty="Social"
+          organiser="Pearl City Riders"
+          joining="7"
+          tags={[{ type: 'coffee', label: 'Coffee Stop' }, { type: 'tourist', label: 'Tourist Friendly' }]}
+        />
+      </div>
+
+      {/* Training sessions */}
+      <div className="ip-section-hd">
+        <div className="ip-section-title">⚡ Training Sessions</div>
+        <a className="ip-section-link">See all →</a>
+      </div>
+      <div style={{ padding: '0 20px' }}>
+        <SessionCard
+          title="Kandy Hills Interval Training"
+          type="Run"
+          date={{ day: '03', dow: 'SAT', time: '5:30 AM' }}
+          location="Kandy"
+          km="12"
+          pace="5:00–5:30 /km"
+          difficulty="Hard"
+          organiser="Hill Runners SL"
+          joining="9"
+          tags={[{ type: 'hard', label: 'Hard' }, { type: 'beginner', label: 'Helmet Req' }]}
+        />
+      </div>
+
+      {/* Upcoming events */}
+      <div className="ip-section-hd">
+        <div className="ip-section-title">🏁 Upcoming Events</div>
+        <a className="ip-section-link">Calendar →</a>
+      </div>
+      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {[
+          { d: '17', m: 'MAY', title: 'Colombo Tri Series', sub: 'Beira Lake · Triathlon · 750m swim / 20km bike / 5km run', badge: 'tri', bl: 'Triathlon' },
+          { d: '01', m: 'JUN', title: 'Kandy Mountain Challenge', sub: 'Kandy · Road Ride · 120 km · Gran Fondo format', badge: 'ride', bl: 'Endurance' },
+        ].map(e => (
+          <div className="ip-cal-event" key={e.title}>
+            <div className="ip-cal-date">
+              <span className="ip-cal-d">{e.d}</span>
+              <span className="ip-cal-m">{e.m}</span>
+            </div>
+            <div className="ip-cal-body">
+              <div className="ip-cal-title">{e.title}</div>
+              <div className="ip-cal-meta">{e.sub}</div>
+              <div className="ip-cal-badge"><Badge type={e.badge}>{e.bl}</Badge></div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Popular clubs */}
+      <div className="ip-section-hd">
+        <div className="ip-section-title">🏷️ Popular Clubs</div>
+        <a className="ip-section-link">See all →</a>
+      </div>
+      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {[
+          { init: 'CCC', name: 'Colombo Cycling Club', city: 'Colombo', members: 140, weekly: 3, type: 'Ride' },
+          { init: 'SLR', name: 'Sri Lanka Runners', city: 'Island-wide', members: 220, weekly: 5, type: 'Run' },
+        ].map(c => (
+          <div className="ip-club-card" key={c.name}>
+            <div className="ip-club-logo" style={{ background: c.type === 'Run' ? 'var(--ip-blue)' : 'var(--ip-text)' }}>{c.init}</div>
+            <div style={{ flex: 1 }}>
+              <div className="ip-club-name">{c.name}</div>
+              <div className="ip-club-meta">{c.city}</div>
+              <div className="ip-club-stats">
+                <div className="ip-club-stat"><strong>{c.members}</strong> members</div>
+                <div className="ip-club-stat"><strong>{c.weekly}</strong>× weekly</div>
+                <Badge type={c.type === 'Run' ? 'run' : 'ride'}>{c.type}</Badge>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Submit CTA */}
+      <div style={{ margin: '20px 20px 32px', background: 'var(--ip-text)', borderRadius: 14, padding: '22px 20px', color: 'white', textAlign: 'center' }}>
+        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 6 }}>Organising a Ride or Run?</div>
+        <div style={{ fontSize: 13, color: 'oklch(75% 0.01 250)', marginBottom: 16, lineHeight: 1.5 }}>Share it with the Island Pace community — free and takes 2 minutes.</div>
+        <button className="ip-hero-btn-primary" style={{ width: '100%', padding: '13px' }}>Submit a Ride or Run →</button>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   SCREEN 2 — EXPLORE SESSIONS
+────────────────────────────────────────────── */
+function ExploreScreen() {
+  const [activeFilter, setActiveFilter] = useState('All');
+  const filters = ['All', 'Ride', 'Run', 'Triathlon', 'This Weekend', 'Coffee Stop', 'No Drop', 'Beginner'];
+  return (
+    <div className="ip-screen">
+      <Nav title="Explore" />
+
+      {/* Search bar */}
+      <div style={{ padding: '12px 20px 0' }}>
+        <div style={{ position: 'relative' }}>
+          <input className="ip-input" placeholder="Search sessions, clubs, locations…" style={{ paddingLeft: 38, fontSize: 14 }} readOnly />
+          <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--ip-text-3)', fontSize: 15 }}>🔍</span>
+        </div>
+      </div>
+
+      {/* Filter chips */}
+      <div className="ip-chips">
+        {filters.map(f => (
+          <div key={f} className={`ip-chip ${activeFilter === f ? 'active' : ''}`} onClick={() => setActiveFilter(f)}>{f}</div>
+        ))}
+      </div>
+
+      {/* Active filters display */}
+      <div style={{ padding: '0 20px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
+        <span style={{ fontSize: 12, color: 'var(--ip-text-3)' }}>24 sessions found</span>
+        <div style={{ flex: 1 }}></div>
+        <button style={{ fontSize: 12, color: 'var(--ip-accent)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Filter ⧉</button>
+        <button style={{ fontSize: 12, color: 'var(--ip-text-3)', background: 'none', border: 'none', cursor: 'pointer' }}>Sort ↕</button>
+      </div>
+
+      {/* Date group label */}
+      <div style={{ padding: '0 20px 10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ip-text-3)' }}>Saturday 3 May</div>
+          <div style={{ flex: 1, height: 1, background: 'var(--ip-border)' }}></div>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 11, fontWeight: 600, color: 'var(--ip-accent)' }}>THIS WEEKEND</div>
+        </div>
+      </div>
+
+      <div style={{ padding: '0 20px' }}>
+        <SessionCard
+          title="Colombo Coffee Loop"
+          type="Ride"
+          date={{ day: '03', dow: 'SAT', time: '6:00 AM' }}
+          location="Colombo 7"
+          km="42"
+          pace="25–28 km/h"
+          difficulty="Social"
+          organiser="Colombo CC"
+          joining="12"
+          tags={[{ type: 'nodrop', label: 'No Drop' }, { type: 'coffee', label: 'Coffee Stop' }]}
+        />
+        <SessionCard
+          title="Negombo Beach Run"
+          type="Run"
+          date={{ day: '03', dow: 'SAT', time: '6:30 AM' }}
+          location="Negombo"
+          km="10"
+          pace="6:00 /km"
+          difficulty="Social"
+          organiser="Lanka Runners"
+          joining="18"
+          tags={[{ type: 'beginner', label: 'Beginner OK' }, { type: 'tourist', label: 'Tourist Friendly' }]}
+        />
+      </div>
+
+      <div style={{ padding: '8px 20px 10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ip-text-3)' }}>Sunday 4 May</div>
+          <div style={{ flex: 1, height: 1, background: 'var(--ip-border)' }}></div>
+        </div>
+      </div>
+
+      <div style={{ padding: '0 20px' }}>
+        <SessionCard
+          title="Galle Face Sunrise Roll"
+          type="Ride"
+          date={{ day: '04', dow: 'SUN', time: '5:45 AM' }}
+          location="Fort, Colombo"
+          km="28"
+          pace="22–25 km/h"
+          difficulty="Social"
+          organiser="Pearl City Riders"
+          joining="7"
+          tags={[{ type: 'coffee', label: 'Coffee Stop' }, { type: 'tourist', label: 'Tourist OK' }]}
+        />
+        <SessionCard
+          title="Kandy Hills Interval"
+          type="Run"
+          date={{ day: '04', dow: 'SUN', time: '5:30 AM' }}
+          location="Kandy"
+          km="12"
+          pace="5:00–5:30 /km"
+          difficulty="Hard"
+          organiser="Hill Runners SL"
+          joining="9"
+          tags={[{ type: 'hard', label: 'Hard' }, { type: 'women', label: 'Women Friendly' }]}
+        />
+      </div>
+
+      {/* Load more */}
+      <div style={{ padding: '8px 20px 32px' }}>
+        <button className="ip-btn ip-btn-outline ip-btn-full">Load more sessions</button>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   SCREEN 3 — ACTIVITY DETAIL
+────────────────────────────────────────────── */
+function DetailScreen() {
+  return (
+    <div className="ip-screen">
+      {/* Back nav */}
+      <div className="ip-nav">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button className="ip-nav-btn" style={{ fontSize: 20, marginLeft: -4 }}>←</button>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>Session Detail</span>
+        </div>
+        <div className="ip-nav-actions">
+          <button className="ip-nav-btn">⬆</button>
+          <button className="ip-nav-btn">•••</button>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div className="ip-detail-hero">
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <Badge type="ride">Ride</Badge>
+          <Badge type="social">Social</Badge>
+          <Badge type="coffee">Coffee Stop</Badge>
+        </div>
+        <div className="ip-detail-title">Colombo Coffee Loop</div>
+        <div className="ip-detail-meta-row">
+          <span>Sat 3 May · 6:00 AM</span>
+          <span className="ip-detail-meta-dot">·</span>
+          <span>Colombo 7, Independence Square</span>
+        </div>
+      </div>
+
+      {/* Quick stats card */}
+      <div className="ip-quick-stats">
+        <div className="ip-quick-stats-grid">
+          <div className="ip-qs-item">
+            <span className="ip-qs-num">42<span className="ip-qs-unit"> km</span></span>
+            <div className="ip-qs-label">Distance</div>
+          </div>
+          <div className="ip-qs-item">
+            <span className="ip-qs-num">25<span className="ip-qs-unit">–28</span></span>
+            <div className="ip-qs-label">km/h avg</div>
+          </div>
+          <div className="ip-qs-item">
+            <span className="ip-qs-num">~2<span className="ip-qs-unit">hr</span></span>
+            <div className="ip-qs-label">Duration</div>
+          </div>
+        </div>
+        <div style={{ padding: '10px 14px', borderTop: '1px solid var(--ip-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Badge type="nodrop">No Drop</Badge>
+            <Badge type="beginner">Beginner OK</Badge>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--ip-text-2)' }}>
+            <span style={{ fontSize: 16 }}>👥</span>
+            <strong style={{ color: 'var(--ip-text)' }}>12</strong>&nbsp;joining
+          </div>
+        </div>
+      </div>
+
+      {/* Route */}
+      <div className="ip-detail-section">
+        <div className="ip-detail-section-title">Route</div>
+        <div className="ip-route-placeholder">
+          <div className="ip-route-grid"></div>
+          <div className="ip-route-path">
+            <svg width="200" height="60" viewBox="0 0 200 60" fill="none">
+              <path d="M10 45 C 40 10, 70 50, 100 25 S 160 5, 190 30" stroke="oklch(62% 0.18 38)" strokeWidth="2.5" strokeLinecap="round" fill="none" strokeDasharray="0"/>
+              <circle cx="10" cy="45" r="4" fill="oklch(55% 0.14 148)"/>
+              <circle cx="190" cy="30" r="4" fill="oklch(62% 0.18 38)"/>
+            </svg>
+          </div>
+          <div style={{ position: 'absolute', bottom: 8, right: 10 }}>
+            <button style={{ fontSize: 11, color: 'var(--ip-accent)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Open in Strava →</button>
+          </div>
+        </div>
+        <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+          <div style={{ flex: 1, background: 'var(--ip-bg2)', borderRadius: 6, padding: '8px 10px' }}>
+            <div style={{ fontSize: 10, color: 'var(--ip-text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Start</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ip-text)', marginTop: 2 }}>Independence Square</div>
+          </div>
+          <div style={{ flex: 1, background: 'var(--ip-bg2)', borderRadius: 6, padding: '8px 10px' }}>
+            <div style={{ fontSize: 10, color: 'var(--ip-text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>End</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ip-text)', marginTop: 2 }}>Barista Café, Bambalapitiya</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Suitability */}
+      <div className="ip-detail-section">
+        <div className="ip-detail-section-title">Suitability</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <Badge type="nodrop">✓ No Drop</Badge>
+          <Badge type="beginner">✓ Beginner OK</Badge>
+          <Badge type="tourist">✓ Tourist Friendly</Badge>
+          <Badge type="coffee">✓ Coffee Stop</Badge>
+          <Badge type="tag">Helmet Recommended</Badge>
+        </div>
+        <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--ip-bg2)', borderRadius: 6, fontSize: 13, color: 'var(--ip-text-2)', lineHeight: 1.55 }}>
+          This is a social-paced ride — no one gets left behind. Suitable for riders comfortable at 25–28 km/h on flat coastal roads.
+        </div>
+      </div>
+
+      {/* Organiser */}
+      <div className="ip-detail-section">
+        <div className="ip-detail-section-title">Organiser</div>
+        <div className="ip-organiser-card">
+          <div className="ip-organiser-avatar">CC</div>
+          <div style={{ flex: 1 }}>
+            <div className="ip-organiser-name">Colombo Cycling Club</div>
+            <div className="ip-organiser-club">Active since 2019 · 140 members</div>
+            <div className="ip-contact-btns">
+              <button className="ip-btn ip-btn-ghost ip-btn-sm">📱 WhatsApp</button>
+              <button className="ip-btn ip-btn-ghost ip-btn-sm">Strava →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Safety */}
+      <div className="ip-detail-section" style={{ borderBottom: 'none' }}>
+        <div className="ip-detail-section-title">Safety Notes</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {['Ride in a group at all times', 'Helmet strongly recommended', 'Bring water — no stops for first 20 km', 'Group chat link shared on WhatsApp'].map(note => (
+            <div key={note} style={{ display: 'flex', gap: 8, fontSize: 13, color: 'var(--ip-text-2)', alignItems: 'flex-start' }}>
+              <span style={{ color: 'var(--ip-green)', fontWeight: 700, flexShrink: 0 }}>—</span>
+              <span>{note}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA strip */}
+      <div className="ip-cta-strip">
+        <button className="ip-btn ip-btn-primary" style={{ flex: 2 }}>I'm Interested</button>
+        <button className="ip-btn ip-btn-outline" style={{ flex: 1 }}>📱 WhatsApp</button>
+        <button className="ip-btn ip-btn-ghost" style={{ padding: '11px 14px' }}>⬆</button>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   SCREEN 4 — SUBMIT FORM
+────────────────────────────────────────────── */
+function SubmitScreen() {
+  const [step, setStep] = useState(1);
+  const [coffeeStop, setCoffeeStop] = useState(true);
+  const [noDrop, setNoDrop] = useState(true);
+  const [beginner, setBeginner] = useState(false);
+
+  return (
+    <div className="ip-screen">
+      <div className="ip-nav">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button className="ip-nav-btn" style={{ fontSize: 20, marginLeft: -4 }}>←</button>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>Submit a Session</span>
+        </div>
+        <button className="ip-nav-btn" style={{ color: 'var(--ip-text-3)' }}>✕</button>
+      </div>
+
+      {/* Stepper */}
+      <div className="ip-stepper">
+        <div className={`ip-step ${step >= 1 ? 'done' : ''}`}></div>
+        <div className="ip-step-gap"></div>
+        <div className={`ip-step ${step >= 2 ? 'done' : ''}`}></div>
+        <div className="ip-step-gap"></div>
+        <div className={`ip-step ${step >= 3 ? 'done' : ''}`}></div>
+      </div>
+      <div className="ip-stepper-label">
+        <strong>Step {step} of 3</strong> — {step === 1 ? 'Core Details' : step === 2 ? 'Session Details' : 'Organiser & Visibility'}
+      </div>
+
+      {step === 1 && (
+        <div style={{ padding: '8px 20px 120px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div className="ip-field">
+            <label className="ip-label">Activity Title</label>
+            <input className="ip-input" placeholder="e.g. Colombo Coffee Loop" />
+          </div>
+          <div className="ip-field">
+            <label className="ip-label">Activity Type</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              {['Ride', 'Run', 'Triathlon'].map((t, i) => (
+                <button key={t} style={{
+                  padding: '10px 8px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  border: i === 0 ? '2px solid var(--ip-accent)' : '1.5px solid var(--ip-border)',
+                  background: i === 0 ? 'var(--ip-accent-lt)' : 'var(--ip-surface)',
+                  color: i === 0 ? 'var(--ip-accent)' : 'var(--ip-text-2)',
+                  cursor: 'pointer'
+                }}>{t}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="ip-field">
+              <label className="ip-label">Date</label>
+              <input className="ip-input" type="date" defaultValue="2026-05-03" />
+            </div>
+            <div className="ip-field">
+              <label className="ip-label">Start Time</label>
+              <input className="ip-input" type="time" defaultValue="06:00" />
+            </div>
+          </div>
+          <div className="ip-field">
+            <label className="ip-label">City / Area</label>
+            <select className="ip-select">
+              <option>Colombo</option>
+              <option>Kandy</option>
+              <option>Galle</option>
+              <option>Negombo</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div className="ip-field">
+            <label className="ip-label">Start Location</label>
+            <input className="ip-input" placeholder="e.g. Independence Square, Colombo 7" />
+          </div>
+          <div className="ip-field">
+            <label className="ip-label">Difficulty</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6 }}>
+              {['Easy', 'Social', 'Moderate', 'Hard'].map((d, i) => (
+                <button key={d} style={{
+                  padding: '8px 4px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                  border: i === 1 ? '2px solid var(--ip-text)' : '1.5px solid var(--ip-border)',
+                  background: i === 1 ? 'var(--ip-text)' : 'var(--ip-surface)',
+                  color: i === 1 ? 'white' : 'var(--ip-text-2)',
+                  cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.04em'
+                }}>{d}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div style={{ padding: '8px 20px 120px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="ip-field">
+              <label className="ip-label">Distance (km)</label>
+              <input className="ip-input" placeholder="e.g. 42" />
+            </div>
+            <div className="ip-field">
+              <label className="ip-label">Duration (est.)</label>
+              <input className="ip-input" placeholder="e.g. 2 hours" />
+            </div>
+          </div>
+          <div className="ip-field">
+            <label className="ip-label">Pace or Speed</label>
+            <input className="ip-input" placeholder="e.g. 25–28 km/h or 5:30 /km" />
+          </div>
+          <div className="ip-field">
+            <label className="ip-label">Route Link (optional)</label>
+            <input className="ip-input" placeholder="Strava route, Komoot, or Google Maps link" />
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--ip-border)', paddingTop: 18 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ip-text-3)', marginBottom: 4 }}>Session Tags</div>
+            <div style={{ fontSize: 12, color: 'var(--ip-text-3)', marginBottom: 12 }}>Helps riders find you.</div>
+            <div className="ip-toggle-row">
+              <div>
+                <div className="ip-toggle-label">Coffee Stop</div>
+                <div className="ip-toggle-sub">Ends at a café</div>
+              </div>
+              <button className={`ip-toggle ${coffeeStop ? '' : 'off'}`} onClick={() => setCoffeeStop(!coffeeStop)}></button>
+            </div>
+            <div className="ip-toggle-row">
+              <div>
+                <div className="ip-toggle-label">No Drop Ride</div>
+                <div className="ip-toggle-sub">No one gets left behind</div>
+              </div>
+              <button className={`ip-toggle ${noDrop ? '' : 'off'}`} onClick={() => setNoDrop(!noDrop)}></button>
+            </div>
+            <div className="ip-toggle-row">
+              <div>
+                <div className="ip-toggle-label">Beginner Friendly</div>
+              </div>
+              <button className={`ip-toggle ${beginner ? '' : 'off'}`} onClick={() => setBeginner(!beginner)}></button>
+            </div>
+            <div className="ip-toggle-row" style={{ borderBottom: 'none' }}>
+              <div>
+                <div className="ip-toggle-label">Tourist Friendly</div>
+                <div className="ip-toggle-sub">Open to visitors</div>
+              </div>
+              <button className="ip-toggle off" onClick={() => {}}></button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div style={{ padding: '8px 20px 120px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div className="ip-field">
+            <label className="ip-label">Organiser Name / Club</label>
+            <input className="ip-input" placeholder="e.g. Colombo Cycling Club" />
+          </div>
+          <div className="ip-field">
+            <label className="ip-label">WhatsApp Contact</label>
+            <input className="ip-input" placeholder="+94 77 xxx xxxx" />
+          </div>
+          <div className="ip-field">
+            <label className="ip-label">Strava Club Link (optional)</label>
+            <input className="ip-input" placeholder="strava.com/clubs/…" />
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--ip-border)', paddingTop: 16 }}>
+            <div className="ip-field" style={{ marginBottom: 14 }}>
+              <label className="ip-label">Activity Visibility</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
+                {[
+                  { val: 'public', label: 'Public', sub: 'Visible to everyone on Island Pace' },
+                  { val: 'unlisted', label: 'Unlisted', sub: 'Only via direct link' },
+                  { val: 'private', label: 'Private', sub: 'Invite-only' }
+                ].map((opt, i) => (
+                  <label key={opt.val} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', border: i === 0 ? '5px solid var(--ip-accent)' : '1.5px solid var(--ip-border)', marginTop: 2, flexShrink: 0, background: i === 0 ? 'var(--ip-accent-lt)' : 'transparent' }}></div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600 }}>{opt.label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ip-text-3)' }}>{opt.sub}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="ip-field">
+              <label className="ip-label">Attendee Visibility</label>
+              <select className="ip-select" style={{ marginTop: 4 }}>
+                <option>Show count only (recommended)</option>
+                <option>Show names publicly</option>
+                <option>Hide attendee info</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Nav buttons */}
+      <div style={{
+        position: 'sticky', bottom: 0, background: 'var(--ip-surface)',
+        borderTop: '1px solid var(--ip-border)', padding: '16px 20px',
+        display: 'flex', gap: 10
+      }}>
+        {step > 1 && (
+          <button className="ip-btn ip-btn-outline" style={{ flex: 1 }} onClick={() => setStep(s => s - 1)}>← Back</button>
+        )}
+        {step < 3 ? (
+          <button className="ip-btn ip-btn-primary" style={{ flex: 2 }} onClick={() => setStep(s => s + 1)}>
+            Continue →
+          </button>
+        ) : (
+          <button className="ip-btn ip-btn-primary" style={{ flex: 2 }}>
+            Submit Session ✓
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   SCREEN 5 — STYLE GUIDE / BADGE SYSTEM
+────────────────────────────────────────────── */
+function StyleGuide() {
+  return (
+    <div style={{ background: 'oklch(97.5% 0.006 80)', padding: '24px', fontFamily: 'DM Sans, sans-serif', color: 'oklch(14% 0.01 250)', minWidth: 420 }}>
+      <div className="sg-title">Island Pace</div>
+      <div style={{ fontSize: 13, color: 'oklch(42% 0.015 240)', marginBottom: 24, fontStyle: 'italic' }}>Visual Style Guide</div>
+
+      <div className="sg-section">
+        <div className="sg-section-label">Color Palette</div>
+        <div className="sg-row">
+          {[
+            { bg: 'oklch(14% 0.01 250)', label: 'Text', val: 'Near-black' },
+            { bg: 'oklch(62% 0.18 38)', label: 'Accent', val: 'Coral-orange' },
+            { bg: 'oklch(55% 0.14 148)', label: 'Green', val: 'No Drop' },
+            { bg: 'oklch(55% 0.14 248)', label: 'Blue', val: 'Run' },
+            { bg: 'oklch(97.5% 0.006 80)', label: 'BG', val: 'Warm white', border: true },
+            { bg: 'oklch(88% 0.01 75)', label: 'Border', val: 'Warm gray', border: true },
+          ].map(c => (
+            <div key={c.label} style={{ textAlign: 'center' }}>
+              <div className="sg-swatch" style={{ background: c.bg, border: c.border ? '1px solid #ccc' : 'none' }}></div>
+              <div className="sg-label">{c.label}</div>
+              <div className="sg-value">{c.val}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="sg-section">
+        <div className="sg-section-label">Typography</div>
+        <div style={{ marginBottom: 10 }}>
+          <div className="sg-font-demo">Barlow Condensed</div>
+          <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>Display · Headlines · Stats — 700–900 weight · All-caps preferred</div>
+        </div>
+        <div>
+          <div className="sg-body-demo">DM Sans — Body, labels, UI text.</div>
+          <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>300–600 weight · 13–15px body · 11–12px labels</div>
+        </div>
+      </div>
+
+      <div className="sg-section">
+        <div className="sg-section-label">Badge System</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <Badge type="ride">Ride</Badge>
+          <Badge type="run">Run</Badge>
+          <Badge type="tri">Triathlon</Badge>
+          <Badge type="social">Social</Badge>
+          <Badge type="coffee">Coffee Stop</Badge>
+          <Badge type="nodrop">No Drop</Badge>
+          <Badge type="beginner">Beginner OK</Badge>
+          <Badge type="tourist">Tourist Friendly</Badge>
+          <Badge type="women">Women Friendly</Badge>
+          <Badge type="hard">Hard</Badge>
+          <Badge type="tag">Helmet Req</Badge>
+          <Badge type="tag">Strava KOM Route</Badge>
+        </div>
+      </div>
+
+      <div className="sg-section">
+        <div className="sg-section-label">Button System</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button className="ip-btn ip-btn-primary">Primary</button>
+          <button className="ip-btn ip-btn-secondary">Secondary</button>
+          <button className="ip-btn ip-btn-outline">Outline</button>
+          <button className="ip-btn ip-btn-ghost">Ghost</button>
+        </div>
+      </div>
+
+      <div className="sg-section">
+        <div className="sg-section-label">Activity Card</div>
+        <SessionCard
+          title="Colombo Coffee Loop"
+          type="Ride"
+          date={{ day: '03', dow: 'SAT', time: '6:00 AM' }}
+          location="Colombo 7"
+          km="42"
+          pace="25–28 km/h"
+          difficulty="Social"
+          organiser="Colombo Cycling Club"
+          joining="12"
+          tags={[{ type: 'nodrop', label: 'No Drop' }, { type: 'coffee', label: 'Coffee Stop' }, { type: 'tourist', label: 'Tourist OK' }]}
+        />
+      </div>
+
+      <div className="sg-section">
+        <div className="sg-section-label">Design Principles</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {[
+            'Mobile-first · 390px base width',
+            'White + warm-toned backgrounds — never pure #fff or #000',
+            'One accent color (coral-orange) used sparingly',
+            'Large typographic date treatment for at-a-glance scanning',
+            'Rounded cards with subtle shadow — no heavy elevation',
+            'Sticky CTA strip on detail pages — always accessible',
+            '5-second rule: purpose legible without reading copy',
+          ].map(p => (
+            <div key={p} style={{ display: 'flex', gap: 8, fontSize: 13, color: 'oklch(42% 0.015 240)' }}>
+              <span style={{ color: 'oklch(62% 0.18 38)', fontWeight: 700 }}>→</span>
+              <span>{p}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   CONCEPT A — Ultra-minimal premium
+────────────────────────────────────────────── */
+function ConceptA() {
+  return (
+    <div className="ip-screen" style={{ background: 'oklch(98% 0.004 80)' }}>
+      <div className="ip-nav" style={{ background: 'oklch(98% 0.004 80)', borderBottom: '1px solid oklch(90% 0.008 75)' }}>
+        <div className="ip-logo" style={{ letterSpacing: '0.12em', fontSize: 16 }}>ISLAND<span>PACE</span></div>
+        <div className="ip-nav-actions">
+          <button className="ip-nav-btn">↗</button>
+        </div>
+      </div>
+
+      {/* Minimal hero — editorial */}
+      <div style={{ padding: '40px 24px 32px', borderBottom: '1px solid oklch(90% 0.008 75)' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'oklch(62% 0.18 38)', marginBottom: 16 }}>Sri Lanka · May 2026</div>
+        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 52, fontWeight: 900, lineHeight: 0.95, textTransform: 'uppercase', letterSpacing: '-0.01em', color: 'oklch(14% 0.01 250)', marginBottom: 20 }}>
+          Find Your<br/>Next Ride<br/><span style={{ color: 'oklch(62% 0.18 38)' }}>or Run.</span>
+        </div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <button style={{ background: 'oklch(14% 0.01 250)', color: 'white', border: 'none', borderRadius: 6, padding: '12px 22px', fontFamily: 'DM Sans, sans-serif', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Explore Sessions</button>
+          <button style={{ background: 'none', border: 'none', color: 'oklch(62% 0.18 38)', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: '12px 0', textDecoration: 'underline', textUnderlineOffset: 4 }}>Submit →</button>
+        </div>
+      </div>
+
+      {/* Minimal list — no cards, just ruled lines */}
+      <div style={{ padding: '0 24px' }}>
+        <div style={{ padding: '14px 0', display: 'flex', alignItems: 'center', gap: 0, borderBottom: '1px solid oklch(90% 0.008 75)' }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'oklch(62% 0.18 38)', minWidth: 36 }}>SAT<br/>3</div>
+          <div style={{ width: 1, background: 'oklch(90% 0.008 75)', height: 36, margin: '0 16px' }}></div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 18, fontWeight: 700, textTransform: 'uppercase' }}>Colombo Coffee Loop</div>
+            <div style={{ fontSize: 12, color: 'oklch(55% 0.01 250)', marginTop: 2 }}>6:00 AM · 42 km · 25–28 km/h · Social</div>
+          </div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <Badge type="coffee">☕</Badge>
+          </div>
+        </div>
+        {[
+          { date: 'SAT\n3', title: 'Negombo Beach Run', meta: '6:30 AM · 10 km · 6:00/km · Social', badge: 'run', bl: '🏃' },
+          { date: 'SUN\n4', title: 'Galle Face Sunrise Roll', meta: '5:45 AM · 28 km · 22–25 km/h', badge: 'ride', bl: '🚴' },
+          { date: 'SUN\n4', title: 'Kandy Hills Interval', meta: '5:30 AM · 12 km · 5:00–5:30/km · Hard', badge: 'run', bl: '🏃' },
+        ].map(e => (
+          <div key={e.title} style={{ padding: '14px 0', display: 'flex', alignItems: 'center', borderBottom: '1px solid oklch(90% 0.008 75)' }}>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'oklch(55% 0.01 250)', minWidth: 36, lineHeight: 1.2 }}>{e.date}</div>
+            <div style={{ width: 1, background: 'oklch(90% 0.008 75)', height: 36, margin: '0 16px' }}></div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 18, fontWeight: 700, textTransform: 'uppercase' }}>{e.title}</div>
+              <div style={{ fontSize: 12, color: 'oklch(55% 0.01 250)', marginTop: 2 }}>{e.meta}</div>
+            </div>
+            <Badge type={e.badge}>{e.bl}</Badge>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ padding: '20px 24px', textAlign: 'center' }}>
+        <div style={{ fontSize: 11, color: 'oklch(62% 0.01 250)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>24 sessions this week · 3 cities</div>
+      </div>
+
+      <div style={{ margin: '0 24px 32px', border: '1px solid oklch(14% 0.01 250)', borderRadius: 8, padding: '20px' }}>
+        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 20, fontWeight: 800, textTransform: 'uppercase', marginBottom: 4 }}>Organise a Session</div>
+        <div style={{ fontSize: 13, color: 'oklch(42% 0.015 240)', marginBottom: 14, lineHeight: 1.5 }}>Free. Takes 2 minutes. Reaches the whole community.</div>
+        <button style={{ background: 'oklch(14% 0.01 250)', color: 'white', border: 'none', borderRadius: 6, padding: '11px 20px', fontFamily: 'DM Sans, sans-serif', fontSize: 13, fontWeight: 600, cursor: 'pointer', width: '100%' }}>Submit a Ride or Run →</button>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   CONCEPT B — Sporty community board
+────────────────────────────────────────────── */
+function ConceptB() {
+  return (
+    <div className="ip-screen concept-b" style={{ background: 'oklch(96% 0.01 240)' }}>
+      {/* Bold top bar */}
+      <div style={{ background: 'oklch(20% 0.05 250)', padding: '16px 20px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 22, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'white' }}>
+          ISLAND<span style={{ color: 'oklch(55% 0.22 148)' }}>PACE</span>
+        </div>
+        <button style={{ background: 'oklch(55% 0.22 148)', color: 'white', border: 'none', borderRadius: 6, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em', textTransform: 'uppercase' }}>+ Submit</button>
+      </div>
+
+      {/* Hero — full bleed with community feel */}
+      <div style={{ background: 'oklch(20% 0.05 250)', padding: '0 20px 28px' }}>
+        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 42, fontWeight: 900, lineHeight: 0.95, textTransform: 'uppercase', color: 'white', marginBottom: 10 }}>
+          Your Next<br/>
+          <span style={{ color: 'oklch(55% 0.22 148)' }}>Sri Lanka</span><br/>
+          Adventure.
+        </div>
+        <div style={{ fontSize: 13, color: 'oklch(75% 0.02 250)', marginBottom: 20, lineHeight: 1.5 }}>Rides · Runs · Coffee · Events</div>
+
+        {/* Weekend scoreboard */}
+        <div style={{ background: 'oklch(100% 0 0 / 0.08)', borderRadius: 12, padding: '14px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0 }}>
+          {[{ n: '8', l: 'Weekend' }, { n: '24', l: 'This Week' }, { n: '6', l: 'Active Clubs' }].map((s, i) => (
+            <div key={s.l} style={{ textAlign: 'center', borderRight: i < 2 ? '1px solid oklch(100% 0 0 / 0.15)' : 'none', padding: '4px 0' }}>
+              <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 30, fontWeight: 800, color: 'white', lineHeight: 1 }}>{s.n}</div>
+              <div style={{ fontSize: 10, color: 'oklch(70% 0.02 250)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Filter strip — green accent */}
+      <div className="ip-chips" style={{ background: 'oklch(96% 0.01 240)', paddingTop: 14 }}>
+        {['All', 'Ride', 'Run', 'Coffee Stop', 'No Drop'].map((f, i) => (
+          <div key={f} style={{
+            padding: '7px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600,
+            background: i === 0 ? 'oklch(20% 0.05 250)' : 'white',
+            color: i === 0 ? 'white' : 'oklch(42% 0.015 240)',
+            border: i === 0 ? 'none' : '1.5px solid oklch(88% 0.01 240)',
+            whiteSpace: 'nowrap', cursor: 'pointer'
+          }}>{f}</div>
+        ))}
+      </div>
+
+      {/* Weekend header */}
+      <div style={{ padding: '12px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 18, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          This Weekend
+        </div>
+        <div style={{ background: 'oklch(55% 0.22 148)', color: 'white', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Live</div>
+      </div>
+
+      {/* Cards with heavier design */}
+      <div style={{ padding: '0 20px' }}>
+        {[
+          { title: 'Colombo Coffee Loop', type: 'Ride', day: '03', dow: 'SAT', time: '6:00 AM', km: '42', pace: '25–28 km/h', n: 12, tags: [{ type: 'nodrop', label: 'No Drop' }, { type: 'coffee', label: 'Coffee Stop' }] },
+          { title: 'Negombo Beach Run', type: 'Run', day: '03', dow: 'SAT', time: '6:30 AM', km: '10', pace: '6:00/km', n: 18, tags: [{ type: 'beginner', label: 'Beginner OK' }, { type: 'tourist', label: 'Tourist OK' }] },
+        ].map(c => (
+          <div key={c.title} style={{ background: 'white', borderRadius: 12, padding: '14px', marginBottom: 10, boxShadow: '0 2px 12px oklch(20% 0.05 250 / 0.1)', border: '1px solid oklch(92% 0.008 240)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+              <div>
+                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 20, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{c.title}</div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                  <Badge type={c.type === 'Ride' ? 'ride' : 'run'}>{c.type}</Badge>
+                  <span style={{ fontSize: 12, color: 'oklch(55% 0.01 250)', paddingTop: 1 }}>{c.time}</span>
+                </div>
+              </div>
+              <div style={{ textAlign: 'center', background: 'oklch(20% 0.05 250)', color: 'white', borderRadius: 8, padding: '6px 10px', minWidth: 44 }}>
+                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 22, fontWeight: 700, lineHeight: 1 }}>{c.day}</div>
+                <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.6 }}>{c.dow}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 14, padding: '10px 0', borderTop: '1px solid oklch(94% 0.008 240)', borderBottom: '1px solid oklch(94% 0.008 240)', marginBottom: 10 }}>
+              <div><div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 18, fontWeight: 700 }}>{c.km}<span style={{ fontSize: 12, fontWeight: 500, color: 'oklch(55% 0.01 250)' }}>km</span></div><div style={{ fontSize: 10, color: 'oklch(55% 0.01 250)', textTransform: 'uppercase' }}>Distance</div></div>
+              <div><div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 18, fontWeight: 700 }}>{c.pace}</div><div style={{ fontSize: 10, color: 'oklch(55% 0.01 250)', textTransform: 'uppercase' }}>Avg</div></div>
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13 }}><strong>{c.n}</strong> joining</div>
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {c.tags.map(t => <Badge key={t.label} type={t.type}>{t.label}</Badge>)}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Community pulse */}
+      <div style={{ margin: '8px 20px 32px', background: 'oklch(20% 0.05 250)', borderRadius: 12, padding: '18px 16px', color: 'white' }}>
+        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 18, fontWeight: 800, textTransform: 'uppercase', marginBottom: 4 }}>Community Board</div>
+        <div style={{ fontSize: 13, color: 'oklch(75% 0.02 250)', marginBottom: 14 }}>Trusted · Curated · Community-led</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {['CCC', 'SLR', 'GRC', 'KHR'].map(c => (
+            <div key={c} style={{ width: 40, height: 40, borderRadius: 8, background: `oklch(${c === 'CCC' ? '62% 0.18 38' : c === 'SLR' ? '55% 0.22 148' : c === 'GRC' ? '55% 0.14 248' : '48% 0.14 310'})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: 13, fontWeight: 800, color: 'white' }}>{c}</div>
+          ))}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', paddingLeft: 4, fontSize: 12, color: 'oklch(70% 0.02 250)' }}>+6 more clubs</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   STYLE GUIDE (standalone artboard)
+────────────────────────────────────────────── */
+function StyleGuideBoard() {
+  const swatches = [
+    { bg: 'oklch(14% 0.01 250)', label: 'Near-black', val: '#0f0f12' },
+    { bg: 'oklch(62% 0.18 38)', label: 'Coral Accent', val: 'oklch(62% 0.18 38)' },
+    { bg: 'oklch(55% 0.14 148)', label: 'Green', val: 'No Drop · Safe' },
+    { bg: 'oklch(55% 0.14 248)', label: 'Blue', val: 'Run · Water' },
+    { bg: 'oklch(48% 0.14 310)', label: 'Violet', val: 'Triathlon' },
+    { bg: 'oklch(97.5% 0.006 80)', label: 'Warm White', val: 'Base bg', border: true },
+    { bg: 'oklch(88% 0.01 75)', label: 'Warm Gray', val: 'Borders', border: true },
+  ];
+
+  return (
+    <div style={{ background: 'white', padding: '28px', fontFamily: 'DM Sans, sans-serif', color: 'oklch(14% 0.01 250)', width: '100%' }}>
+      <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 32, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Island Pace</div>
+      <div style={{ fontSize: 12, color: '#999', marginBottom: 28, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Design System · v1.0 MVP</div>
+
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 12 }}>Colors</div>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          {swatches.map(s => (
+            <div key={s.label} style={{ textAlign: 'center' }}>
+              <div style={{ width: 56, height: 56, borderRadius: 10, background: s.bg, border: s.border ? '1px solid #e0e0e0' : 'none', marginBottom: 6 }}></div>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#444' }}>{s.label}</div>
+              <div style={{ fontSize: 9, color: '#aaa', fontFamily: 'monospace' }}>{s.val}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 12 }}>Type Scale</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[
+            { text: 'COLOMBO COFFEE LOOP', style: { fontFamily: 'Barlow Condensed, sans-serif', fontSize: 28, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.02em' }, label: 'Card title / Hero — Barlow Condensed 800' },
+            { text: 'FIND YOUR NEXT RIDE OR RUN', style: { fontFamily: 'Barlow Condensed, sans-serif', fontSize: 20, fontWeight: 700, textTransform: 'uppercase' }, label: 'Section header — Barlow Condensed 700' },
+            { text: 'Session detail · body copy · 15px DM Sans 400', style: { fontFamily: 'DM Sans, sans-serif', fontSize: 15 }, label: 'Body — DM Sans 400' },
+            { text: 'BADGE LABEL · 11PX · 600', style: { fontFamily: 'DM Sans, sans-serif', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#999' }, label: 'Micro / badge — DM Sans 600' },
+          ].map(t => (
+            <div key={t.label}>
+              <div style={t.style}>{t.text}</div>
+              <div style={{ fontSize: 9, color: '#bbb', marginTop: 2 }}>{t.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 12 }}>Badges</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {[
+            ['ride', 'Ride'], ['run', 'Run'], ['tri', 'Triathlon'],
+            ['social', 'Social'], ['coffee', 'Coffee Stop'], ['nodrop', 'No Drop'],
+            ['beginner', 'Beginner OK'], ['tourist', 'Tourist Friendly'],
+            ['women', 'Women Friendly'], ['hard', 'Hard'], ['tag', 'Helmet Req'],
+          ].map(([t, l]) => <Badge key={l} type={t}>{l}</Badge>)}
+        </div>
+      </div>
+
+      <div>
+        <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 12 }}>Buttons</div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button className="ip-btn ip-btn-primary">Explore Sessions</button>
+          <button className="ip-btn ip-btn-secondary">Submit a Ride</button>
+          <button className="ip-btn ip-btn-outline">Filter ⧉</button>
+          <button className="ip-btn ip-btn-ghost">I'm Interested</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   MAIN APP — Design Canvas wrapper
+────────────────────────────────────────────── */
+function App() {
+  return (
+    <DesignCanvas title="Island Pace — UX/UI Direction" subtitle="Mobile-first MVP design · May 2026">
+      <DCSection id="concept-a-section" title="Concept A — Ultra-Minimal Premium">
+        <DCArtboard id="concept-a-home" label="Homepage" width={390} height={844}>
+          <ConceptA />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="concept-b-section" title="Concept B — Sporty Community Board">
+        <DCArtboard id="concept-b-home" label="Homepage" width={390} height={844}>
+          <ConceptB />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="screens" title="MVP Screens (Main Design Direction)">
+        <DCArtboard id="home" label="01 Homepage" width={390} height={844}>
+          <HomeScreen />
+        </DCArtboard>
+        <DCArtboard id="explore" label="02 Explore Sessions" width={390} height={844}>
+          <ExploreScreen />
+        </DCArtboard>
+        <DCArtboard id="detail" label="03 Activity Detail" width={390} height={844}>
+          <DetailScreen />
+        </DCArtboard>
+        <DCArtboard id="submit" label="04 Submit Activity" width={390} height={844}>
+          <SubmitScreen />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="system" title="Design System">
+        <DCArtboard id="styleguide" label="Style Guide + Badges" width={540} height={680}>
+          <StyleGuideBoard />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

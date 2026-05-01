@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Island Pace — UX/UI Design Direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ip-bg:        oklch(97.5% 0.006 80);
+    --ip-bg2:       oklch(95% 0.008 75);
+    --ip-surface:   oklch(99% 0.003 80);
+    --ip-border:    oklch(88% 0.01 75);
+    --ip-text:      oklch(14% 0.01 250);
+    --ip-text-2:    oklch(42% 0.015 240);
+    --ip-text-3:    oklch(62% 0.01 220);
+    --ip-accent:    oklch(62% 0.18 38);
+    --ip-accent-lt: oklch(94% 0.06 60);
+    --ip-green:     oklch(55% 0.14 148);
+    --ip-green-lt:  oklch(93% 0.05 148);
+    --ip-blue:      oklch(55% 0.14 248);
+    --ip-blue-lt:   oklch(93% 0.05 248);
+    --ip-radius:    8px;
+    --ip-radius-lg: 14px;
+    --ip-shadow:    0 1px 4px oklch(14% 0.01 250 / 0.07), 0 4px 16px oklch(14% 0.01 250 / 0.06);
+  }
+
+  html, body {
+    font-family: 'DM Sans', sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color: var(--ip-text);
+    background: white;
+  }
+
+  @media print {
+    @page { size: A4 landscape; margin: 0; }
+    .page { break-before: page; break-inside: avoid; }
+    .page:first-child { break-before: auto; }
+  }
+
+  /* Each page fills A4 landscape */
+  .page {
+    width: 297mm;
+    height: 210mm;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    background: white;
+  }
+
+  /* ── Page label strip (left edge) ── */
+  .page-label-strip {
+    width: 28px;
+    background: var(--ip-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .page-label-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: oklch(70% 0.01 250);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    white-space: nowrap;
+  }
+  .page-label-text strong { color: white; }
+
+  /* ── Main content area ── */
+  .page-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── Phone mockup column ── */
+  .phone-col {
+    width: 200px;
+    flex-shrink: 0;
+    background: var(--ip-bg2);
+    border-right: 1px solid var(--ip-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 14px 10px;
+    gap: 10px;
+  }
+  .phone-shell {
+    width: 160px;
+    height: 320px;
+    border-radius: 22px;
+    background: var(--ip-text);
+    border: 8px solid var(--ip-text);
+    overflow: hidden;
+    box-shadow: 0 8px 32px oklch(14% 0.01 250 / 0.3);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .phone-notch {
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 60px; height: 14px;
+    background: var(--ip-text);
+    border-radius: 0 0 10px 10px;
+    z-index: 10;
+  }
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    transform-origin: top left;
+  }
+
+  /* ── Annotation col ── */
+  .annotation-col {
+    flex: 1;
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow: hidden;
+  }
+  .annotation-header {
+    border-bottom: 2px solid var(--ip-text);
+    padding-bottom: 10px;
+    margin-bottom: 2px;
+  }
+  .annotation-page-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ip-accent);
+    margin-bottom: 3px;
+  }
+  .annotation-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 0.02em;
+    line-height: 1;
+  }
+  .annotation-subtitle {
+    font-size: 12px; color: var(--ip-text-2); margin-top: 3px;
+  }
+
+  .annotation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    flex: 1;
+  }
+  .annotation-grid.three-col {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .annotation-grid.single {
+    grid-template-columns: 1fr;
+  }
+
+  .annot-block {
+    background: var(--ip-bg);
+    border: 1px solid var(--ip-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .annot-block-accent {
+    background: var(--ip-accent-lt);
+    border-color: oklch(88% 0.08 50);
+  }
+  .annot-block-dark {
+    background: var(--ip-text);
+    border-color: var(--ip-text);
+  }
+  .annot-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ip-text-3); margin-bottom: 4px;
+  }
+  .annot-label-dark { color: oklch(60% 0.01 250); }
+  .annot-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 800; line-height: 1;
+    color: var(--ip-text);
+  }
+  .annot-value-accent { color: var(--ip-accent); }
+  .annot-value-white { color: white; }
+  .annot-desc {
+    font-size: 11px; color: var(--ip-text-2); line-height: 1.5; margin-top: 4px;
+  }
+  .annot-desc-light { color: oklch(70% 0.01 250); }
+
+  .annot-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+  .annot-list-item {
+    display: flex; align-items: flex-start; gap: 6px;
+    font-size: 11px; color: var(--ip-text-2); line-height: 1.4;
+  }
+  .annot-bullet { color: var(--ip-accent); font-weight: 700; flex-shrink: 0; }
+  .annot-bullet-green { color: var(--ip-green); }
+
+  /* ── Badges ── */
+  .ip-badge {
+    display: inline-flex; align-items: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px; font-weight: 700;
+    padding: 2px 6px; border-radius: 3px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .ip-badge-ride    { background: var(--ip-accent-lt); color: var(--ip-accent); }
+  .ip-badge-run     { background: var(--ip-blue-lt);   color: var(--ip-blue); }
+  .ip-badge-tri     { background: oklch(93% 0.05 310); color: oklch(48% 0.14 310); }
+  .ip-badge-social  { background: oklch(93% 0.04 180); color: oklch(42% 0.12 180); }
+  .ip-badge-coffee  { background: oklch(93% 0.06 55);  color: oklch(44% 0.14 55); }
+  .ip-badge-nodrop  { background: var(--ip-green-lt);  color: var(--ip-green); }
+  .ip-badge-tourist { background: oklch(93% 0.06 280); color: oklch(44% 0.14 280); }
+  .ip-badge-beginner{ background: var(--ip-green-lt);  color: var(--ip-green); }
+  .ip-badge-hard    { background: oklch(94% 0.06 20);  color: oklch(48% 0.18 20); }
+  .ip-badge-tag     { background: var(--ip-bg2); color: var(--ip-text-2); border: 1px solid var(--ip-border); }
+  .ip-badge-women   { background: oklch(93% 0.05 340); color: oklch(44% 0.14 340); }
+
+  /* ── Mini session card ── */
+  .mini-card {
+    background: white; border: 1px solid var(--ip-border);
+    border-radius: 6px; padding: 7px 9px;
+  }
+  .mini-card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.02em; margin-bottom: 4px;
+  }
+  .mini-card-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .mini-card-meta { font-size: 10px; color: var(--ip-text-2); }
+  .mini-card-stats { display: flex; gap: 10px; margin: 5px 0; border-top: 1px solid var(--ip-border); border-bottom: 1px solid var(--ip-border); padding: 4px 0; }
+  .mini-stat { display: flex; flex-direction: column; }
+  .mini-stat-num { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; }
+  .mini-stat-lbl { font-size: 8px; color: var(--ip-text-3); text-transform: uppercase; }
+
+  /* ── Cover page ── */
+  .cover-page {
+    width: 297mm;
+    height: 210mm;
+    overflow: hidden;
+    position: relative;
+    background: var(--ip-text);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px 48px;
+  }
+  .cover-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ip-accent);
+  }
+  .cover-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 80px; font-weight: 900;
+    line-height: 0.92; text-transform: uppercase;
+    letter-spacing: -0.01em; color: white;
+  }
+  .cover-title em { color: var(--ip-accent); font-style: normal; }
+  .cover-tagline { font-size: 16px; color: oklch(70% 0.01 250); margin-top: 16px; line-height: 1.5; }
+  .cover-meta { display: flex; gap: 28px; align-items: flex-end; }
+  .cover-meta-item { }
+  .cover-meta-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: oklch(50% 0.01 250); }
+  .cover-meta-value { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: white; margin-top: 2px; }
+  .cover-circle {
+    position: absolute; border-radius: 50%;
+    background: var(--ip-accent); opacity: 0.1;
+  }
+  .cover-toc {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 20px 24px;
+    background: oklch(100% 0 0 / 0.04);
+    border: 1px solid oklch(100% 0 0 / 0.1);
+    border-radius: 10px;
+    min-width: 220px;
+  }
+  .cover-toc-title { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: oklch(50% 0.01 250); margin-bottom: 6px; }
+  .cover-toc-item { display: flex; gap: 10px; align-items: baseline; font-size: 12px; color: oklch(80% 0.01 250); }
+  .cover-toc-num { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; color: var(--ip-accent); min-width: 18px; }
+
+  /* ── Style guide page ── */
+  .sg-page {
+    width: 297mm;
+    height: 210mm;
+    overflow: hidden;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    padding: 28px 36px;
+    gap: 18px;
+  }
+  .sg-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--ip-text); padding-bottom: 10px; }
+  .sg-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; }
+  .sg-logo span { color: var(--ip-accent); }
+  .sg-page-label { font-size: 10px; color: var(--ip-text-3); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+  .sg-row { display: flex; gap: 18px; align-items: flex-start; }
+  .sg-col { display: flex; flex-direction: column; gap: 8px; }
+  .sg-section-title { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ip-text-3); margin-bottom: 6px; }
+  .swatch-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .swatch {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .swatch-block {
+    width: 48px; height: 48px; border-radius: 8px;
+  }
+  .swatch-name { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #555; text-align: center; }
+  .swatch-val { font-size: 7px; color: #aaa; font-family: monospace; text-align: center; }
+
+  .type-row { display: flex; flex-direction: column; gap: 6px; }
+  .type-sample { display: flex; flex-direction: column; gap: 1px; }
+  .type-text { line-height: 1.1; }
+  .type-meta { font-size: 8px; color: #aaa; }
+
+  .badge-row { display: flex; gap: 5px; flex-wrap: wrap; }
+
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .print-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px; font-weight: 700;
+    padding: 6px 14px; border-radius: 6px;
+    white-space: nowrap;
+  }
+  .print-btn-primary { background: var(--ip-accent); color: white; }
+  .print-btn-secondary { background: var(--ip-text); color: white; }
+  .print-btn-outline { background: transparent; color: var(--ip-text); border: 1.5px solid var(--ip-border); }
+  .print-btn-ghost { background: var(--ip-bg2); color: var(--ip-text-2); }
+
+  /* ── Concept comparison page ── */
+  .concept-page {
+    width: 297mm;
+    height: 210mm;
+    overflow: hidden;
+    background: var(--ip-bg);
+    display: flex;
+    flex-direction: column;
+  }
+  .concept-header {
+    background: var(--ip-text); color: white;
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .concept-header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .concept-header-label { font-size: 10px; color: oklch(60% 0.01 250); text-transform: uppercase; letter-spacing: 0.08em; }
+  .concept-body { flex: 1; display: flex; overflow: hidden; }
+  .concept-half {
+    flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    border-right: 1px solid var(--ip-border);
+    padding: 16px 18px; gap: 10px;
+  }
+  .concept-half:last-child { border-right: none; }
+  .concept-half-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .concept-half-sub { font-size: 11px; color: var(--ip-text-2); margin-top: 2px; }
+  .concept-divider { width: 100%; height: 1px; background: var(--ip-border); }
+  .concept-preview {
+    flex: 1; overflow: hidden; border-radius: 8px; position: relative;
+  }
+
+  /* ── Page footer ── */
+  .page-footer {
+    position: absolute; bottom: 0; left: 28px; right: 0;
+    height: 22px; background: var(--ip-bg2);
+    border-top: 1px solid var(--ip-border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px;
+  }
+  .footer-brand { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ip-text-3); }
+  .footer-page { font-size: 9px; color: var(--ip-text-3); }
+
+  /* ── Concept A mini preview ── */
+  .ca-list-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 0; border-bottom: 1px solid var(--ip-border);
+  }
+  .ca-date { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--ip-accent); min-width: 28px; line-height: 1.2; }
+  .ca-divider { width: 1px; height: 28px; background: var(--ip-border); flex-shrink: 0; }
+  .ca-title { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; text-transform: uppercase; }
+  .ca-meta { font-size: 10px; color: var(--ip-text-3); margin-top: 1px; }
+
+  /* ── Concept B preview ── */
+  .cb-header { background: oklch(20% 0.05 250); padding: 10px 12px; border-radius: 6px 6px 0 0; }
+  .cb-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; color: white; }
+  .cb-logo span { color: oklch(55% 0.22 148); }
+  .cb-hero { background: oklch(20% 0.05 250); padding: 8px 12px 12px; }
+  .cb-hero-title { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 900; text-transform: uppercase; line-height: 0.95; color: white; }
+  .cb-hero-title span { color: oklch(55% 0.22 148); }
+  .cb-scoreboard { background: oklch(100% 0 0 / 0.08); border-radius: 6px; padding: 8px; display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 8px; }
+  .cb-score-item { text-align: center; border-right: 1px solid oklch(100% 0 0 / 0.15); }
+  .cb-score-item:last-child { border-right: none; }
+  .cb-score-num { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: white; line-height: 1; }
+  .cb-score-lbl { font-size: 8px; color: oklch(65% 0.02 250); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .cb-card { background: white; border-radius: 6px; padding: 8px 10px; margin: 4px 12px; border: 1px solid oklch(92% 0.008 240); }
+  .cb-card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 800; text-transform: uppercase; }
+  .cb-card-meta { font-size: 9px; color: var(--ip-text-3); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 1 — COVER
+═══════════════════════════════════════════ -->
+<div class="cover-page">
+  <div class="cover-circle" style="width:300px;height:300px;top:-80px;right:-80px;"></div>
+  <div class="cover-circle" style="width:180px;height:180px;bottom:-60px;left:200px;opacity:0.07;"></div>
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+    <div>
+      <div class="cover-eyebrow">UX / UI Design Direction — MVP</div>
+      <div class="cover-title" style="margin-top:16px;">
+        Island<br/><em>Pace</em>
+      </div>
+      <div class="cover-tagline">
+        Find your next ride or run in Sri Lanka.<br/>
+        <span style="font-size:13px;color:oklch(55% 0.01 250);">A discovery platform for runners, cyclists, triathletes &amp; endurance communities.</span>
+      </div>
+    </div>
+
+    <div class="cover-toc">
+      <div class="cover-toc-title">Contents</div>
+      <div class="cover-toc-item"><span class="cover-toc-num">01</span> Design System</div>
+      <div class="cover-toc-item"><span class="cover-toc-num">02</span> Homepage</div>
+      <div class="cover-toc-item"><span class="cover-toc-num">03</span> Explore Sessions</div>
+      <div class="cover-toc-item"><span class="cover-toc-num">04</span> Activity Detail</div>
+      <div class="cover-toc-item"><span class="cover-toc-num">05</span> Submit Activity Form</div>
+      <div class="cover-toc-item"><span class="cover-toc-num">06</span> Concept A — Ultra-minimal</div>
+      <div class="cover-toc-item"><span class="cover-toc-num">07</span> Concept B — Sporty Community</div>
+    </div>
+  </div>
+
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Product</div>
+      <div class="cover-meta-value">Island Pace</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Stage</div>
+      <div class="cover-meta-value">MVP Design Direction</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Market</div>
+      <div class="cover-meta-value">Sri Lanka</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Date</div>
+      <div class="cover-meta-value">May 2026</div>
+    </div>
+    <div style="flex:1;"></div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:white;">ISLAND<span style="color:var(--ip-accent);">PACE</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 2 — DESIGN SYSTEM
+═══════════════════════════════════════════ -->
+<div class="page" style="break-before:page;">
+  <div class="page-label-strip">
+    <div class="page-label-text">ISLAND<strong>PACE</strong> · DESIGN SYSTEM</div>
+  </div>
+  <div class="page-content">
+    <div class="sg-page" style="padding:22px 28px;gap:14px;">
+      <div class="sg-header">
+        <div>
+          <div class="annotation-page-num">01 — Design System</div>
+          <div class="annotation-title">Visual Style Guide</div>
+        </div>
+        <div class="sg-logo">ISLAND<span>PACE</span></div>
+      </div>
+
+      <div style="display:flex;gap:24px;flex:1;overflow:hidden;">
+        <!-- Left col: colors + type -->
+        <div style="display:flex;flex-direction:column;gap:14px;flex:1.2;">
+          <div>
+            <div class="sg-section-title">Color Palette</div>
+            <div class="swatch-row">
+              <div class="swatch">
+                <div class="swatch-block" style="background:oklch(14% 0.01 250);"></div>
+                <div class="swatch-name">Text</div>
+                <div class="swatch-val">Near-black</div>
+              </div>
+              <div class="swatch">
+                <div class="swatch-block" style="background:oklch(62% 0.18 38);"></div>
+                <div class="swatch-name">Accent</div>
+                <div class="swatch-val">Coral-orange</div>
+              </div>
+              <div class="swatch">
+                <div class="swatch-block" style="background:oklch(55% 0.14 148);"></div>
+                <div class="swatch-name">Green</div>
+                <div class="swatch-val">No Drop · Safe</div>
+              </div>
+              <div class="swatch">
+                <div class="swatch-block" style="background:oklch(55% 0.14 248);"></div>
+                <div class="swatch-name">Blue</div>
+                <div class="swatch-val">Run · Water</div>
+              </div>
+              <div class="swatch">
+                <div class="swatch-block" style="background:oklch(48% 0.14 310);"></div>
+                <div class="swatch-name">Violet</div>
+                <div class="swatch-val">Triathlon</div>
+              </div>
+              <div class="swatch">
+                <div class="swatch-block" style="background:oklch(97.5% 0.006 80);border:1px solid #ddd;"></div>
+                <div class="swatch-name">Warm White</div>
+                <div class="swatch-val">Base BG</div>
+              </div>
+              <div class="swatch">
+                <div class="swatch-block" style="background:oklch(88% 0.01 75);border:1px solid #ddd;"></div>
+                <div class="swatch-name">Border</div>
+                <div class="swatch-val">Warm gray</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="sg-section-title">Typography</div>
+            <div class="type-row">
+              <div class="type-sample">
+                <div class="type-text" style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;text-transform:uppercase;letter-spacing:0.02em;line-height:1;">COLOMBO COFFEE LOOP</div>
+                <div class="type-meta">Barlow Condensed · 900 · Uppercase · Card titles, heroes, stats</div>
+              </div>
+              <div class="type-sample">
+                <div class="type-text" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">EXPLORE SESSIONS · SECTION HEADERS</div>
+                <div class="type-meta">Barlow Condensed · 700 · Uppercase · Section headers, nav</div>
+              </div>
+              <div class="type-sample">
+                <div class="type-text" style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:400;">Body copy, descriptions, and UI text at 14–15px. DM Sans 400.</div>
+                <div class="type-meta">DM Sans · 400 · Body text, descriptions, meta</div>
+              </div>
+              <div class="type-sample">
+                <div class="type-text" style="font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#999;">BADGE LABEL · FIELD LABEL · 10PX · 700</div>
+                <div class="type-meta">DM Sans · 700 · Uppercase · Badges, labels, metadata</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right col: badges + buttons + principles -->
+        <div style="display:flex;flex-direction:column;gap:14px;flex:1;">
+          <div>
+            <div class="sg-section-title">Badge System</div>
+            <div class="badge-row">
+              <span class="ip-badge ip-badge-ride">Ride</span>
+              <span class="ip-badge ip-badge-run">Run</span>
+              <span class="ip-badge ip-badge-tri">Triathlon</span>
+              <span class="ip-badge ip-badge-social">Social</span>
+              <span class="ip-badge ip-badge-coffee">Coffee Stop</span>
+              <span class="ip-badge ip-badge-nodrop">No Drop</span>
+              <span class="ip-badge ip-badge-beginner">Beginner OK</span>
+              <span class="ip-badge ip-badge-tourist">Tourist Friendly</span>
+              <span class="ip-badge ip-badge-women">Women Friendly</span>
+              <span class="ip-badge ip-badge-hard">Hard</span>
+              <span class="ip-badge ip-badge-tag">Helmet Req</span>
+              <span class="ip-badge ip-badge-tag">Strava KOM Route</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="sg-section-title">Buttons</div>
+            <div class="btn-row">
+              <span class="print-btn print-btn-primary">Explore Sessions</span>
+              <span class="print-btn print-btn-secondary">Submit a Ride</span>
+              <span class="print-btn print-btn-outline">Filter ⧉</span>
+              <span class="print-btn print-btn-ghost">I'm Interested</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="sg-section-title">Activity Card — Reference</div>
+            <div class="mini-card">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div class="mini-card-title">Colombo Coffee Loop</div>
+                <div style="background:var(--ip-text);color:white;border-radius:5px;padding:3px 6px;text-align:center;min-width:32px;">
+                  <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;line-height:1;">03</div>
+                  <div style="font-size:7px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.6;">SAT</div>
+                </div>
+              </div>
+              <div class="mini-card-row" style="margin-bottom:4px;">
+                <span class="ip-badge ip-badge-ride">Ride</span>
+                <span class="mini-card-meta">6:00 AM · Colombo 7</span>
+              </div>
+              <div class="mini-card-stats">
+                <div class="mini-stat"><div class="mini-stat-num">42<span style="font-size:9px;font-weight:400;color:var(--ip-text-3);">km</span></div><div class="mini-stat-lbl">Distance</div></div>
+                <div class="mini-stat"><div class="mini-stat-num">25–28</div><div class="mini-stat-lbl">km/h avg</div></div>
+                <div class="mini-stat"><div class="mini-stat-num" style="color:var(--ip-green);">Social</div><div class="mini-stat-lbl">Level</div></div>
+              </div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <span class="ip-badge ip-badge-nodrop">No Drop</span>
+                <span class="ip-badge ip-badge-coffee">Coffee Stop</span>
+                <span class="ip-badge ip-badge-tourist">Tourist OK</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--ip-text-3);">
+                <span>Colombo Cycling Club</span><span><strong style="color:var(--ip-text);">12</strong> joining</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="sg-section-title">Design Principles</div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Mobile-first · 390px base · 5-second comprehension rule</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Warm off-white base — never pure white or black</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Single coral-orange accent used sparingly</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Large typographic date for at-a-glance scanning</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Sticky CTA strip always accessible on detail pages</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">ISLANDPACE · MVP</span>
+    <span class="footer-page">01 / 07 — Design System</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 3 — HOMEPAGE
+═══════════════════════════════════════════ -->
+<div class="page" style="break-before:page;">
+  <div class="page-label-strip">
+    <div class="page-label-text">ISLAND<strong>PACE</strong> · HOMEPAGE</div>
+  </div>
+  <div class="page-content">
+    <!-- Phone mockup -->
+    <div class="phone-col">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ip-text-3);text-align:center;">Mobile · 390px</div>
+      <div class="phone-shell">
+        <div class="phone-notch"></div>
+        <!-- Scaled homepage content -->
+        <div class="phone-screen" style="transform:scale(0.41);transform-origin:top left;width:244%;height:244%;background:var(--ip-bg);">
+          <!-- Nav -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;background:var(--ip-surface);border-bottom:1px solid var(--ip-border);">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;letter-spacing:0.04em;text-transform:uppercase;">ISLAND<span style="color:var(--ip-accent);">PACE</span></div>
+            <div style="background:var(--ip-accent);color:white;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;">+ Submit</div>
+          </div>
+          <!-- Hero -->
+          <div style="background:var(--ip-text);padding:28px 18px 24px;position:relative;overflow:hidden;">
+            <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--ip-accent);margin-bottom:8px;">Sri Lanka · May 2026</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:800;line-height:1.05;text-transform:uppercase;color:white;margin-bottom:8px;">Find Your Next<br/><span style="color:var(--ip-accent);">Ride or Run</span><br/>in Sri Lanka.</div>
+            <div style="font-size:13px;color:oklch(75% 0.01 250);margin-bottom:18px;line-height:1.5;">Coffee rides, long runs, training sessions &amp; endurance events.</div>
+            <div style="display:flex;gap:8px;">
+              <div style="background:var(--ip-accent);color:white;font-size:12px;font-weight:600;padding:10px 18px;border-radius:7px;">Explore Sessions</div>
+              <div style="border:1.5px solid oklch(100% 0 0 / 0.25);color:white;font-size:12px;font-weight:500;padding:10px 18px;border-radius:7px;">Submit a Ride</div>
+            </div>
+          </div>
+          <!-- Weekend band -->
+          <div style="margin:14px 18px 10px;background:var(--ip-accent-lt);border:1px solid oklch(88% 0.08 50);border-radius:7px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-accent);">↗ This Weekend</div>
+            <div style="font-size:10px;color:var(--ip-accent);">8 sessions</div>
+          </div>
+          <!-- Stats -->
+          <div style="display:flex;border:1px solid var(--ip-border);border-radius:7px;background:var(--ip-surface);margin:0 18px;">
+            <div style="flex:1;padding:10px 6px;text-align:center;border-right:1px solid var(--ip-border);"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;">24</div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;letter-spacing:0.06em;">This week</div></div>
+            <div style="flex:1;padding:10px 6px;text-align:center;border-right:1px solid var(--ip-border);"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;">6</div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;letter-spacing:0.06em;">Clubs</div></div>
+            <div style="flex:1;padding:10px 6px;text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;">3</div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;letter-spacing:0.06em;">Cities</div></div>
+          </div>
+          <!-- Section -->
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:16px 18px 10px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;">Coffee Rides</div>
+            <div style="font-size:12px;color:var(--ip-accent);">See all →</div>
+          </div>
+          <!-- Card -->
+          <div style="margin:0 18px 10px;background:var(--ip-surface);border:1px solid var(--ip-border);border-radius:12px;padding:14px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;">Colombo Coffee Loop</div>
+              <div style="background:var(--ip-text);color:white;border-radius:6px;padding:5px 8px;text-align:center;min-width:38px;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;line-height:1;">03</div><div style="font-size:8px;opacity:0.6;text-transform:uppercase;letter-spacing:0.08em;">SAT</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;"><span class="ip-badge ip-badge-ride" style="font-size:9px;">Ride</span><span style="font-size:11px;color:var(--ip-text-2);">Colombo 7 · 6:00 AM</span></div>
+            <div style="display:flex;gap:12px;padding:8px 0;border-top:1px solid var(--ip-border);border-bottom:1px solid var(--ip-border);margin-bottom:8px;">
+              <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;">42<span style="font-size:10px;font-weight:400;color:var(--ip-text-3);">km</span></div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;">Distance</div></div>
+              <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;">25–28</div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;">km/h</div></div>
+              <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--ip-green);">Social</div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;">Level</div></div>
+            </div>
+            <div style="display:flex;gap:4px;"><span class="ip-badge ip-badge-nodrop" style="font-size:9px;">No Drop</span><span class="ip-badge ip-badge-coffee" style="font-size:9px;">Coffee Stop</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Annotations -->
+    <div class="annotation-col">
+      <div class="annotation-header">
+        <div class="annotation-page-num">02 — Homepage</div>
+        <div class="annotation-title">Homepage</div>
+        <div class="annotation-subtitle">Primary discovery surface · Designed for 5-second comprehension</div>
+      </div>
+
+      <div class="annotation-grid">
+        <div class="annot-block annot-block-dark">
+          <div class="annot-label annot-label-dark">Hero Section</div>
+          <div class="annot-value annot-value-accent" style="font-size:16px;">Find Your Next<br/>Ride or Run</div>
+          <div class="annot-desc annot-desc-light">Dark background hero ensures immediate visual hierarchy. Coral accent on key phrase. Two CTAs: primary (Explore) + secondary (Submit).</div>
+        </div>
+        <div class="annot-block annot-block-accent">
+          <div class="annot-label">This Weekend Band</div>
+          <div class="annot-value annot-value-accent" style="font-size:14px;">↗ This Weekend</div>
+          <div class="annot-desc">Persistent weekend indicator with session count. Instantly answers "what's on now?" without any interaction.</div>
+        </div>
+        <div class="annot-block">
+          <div class="annot-label">Stats Bar</div>
+          <div style="display:flex;gap:14px;margin:6px 0;">
+            <div style="text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--ip-text);">24</div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;">This Week</div></div>
+            <div style="text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--ip-text);">6</div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;">Clubs</div></div>
+            <div style="text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--ip-text);">3</div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;">Cities</div></div>
+          </div>
+          <div class="annot-desc">Social proof at a glance. Builds trust and shows community activity.</div>
+        </div>
+        <div class="annot-block">
+          <div class="annot-label">Homepage Sections</div>
+          <div class="annot-list">
+            <div class="annot-list-item"><span class="annot-bullet">1.</span><span>Hero + CTAs</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">2.</span><span>This Weekend band</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">3.</span><span>Stats bar (sessions · clubs · cities)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">4.</span><span>Coffee Rides (horizontal scroll)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">5.</span><span>Training Sessions</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">6.</span><span>Upcoming Events (calendar preview)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">7.</span><span>Popular Clubs</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">8.</span><span>Submit CTA block</span></div>
+          </div>
+        </div>
+        <div class="annot-block" style="grid-column:1/-1;">
+          <div class="annot-label">UX Rationale</div>
+          <div style="display:flex;gap:16px;">
+            <div class="annot-desc" style="flex:1;">The homepage answers the core question — "What can I join this weekend?" — above the fold. Dark hero creates an immediate premium feel. Weekend band is persistent so users never have to scroll to find urgency.</div>
+            <div class="annot-desc" style="flex:1;">Section order mirrors user intent: immediate (this weekend) → medium-term (events) → discovery (clubs). Submit CTA at bottom catches organisers naturally after they've seen the value.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">ISLANDPACE · MVP</span>
+    <span class="footer-page">02 / 07 — Homepage</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 4 — EXPLORE SESSIONS
+═══════════════════════════════════════════ -->
+<div class="page" style="break-before:page;">
+  <div class="page-label-strip">
+    <div class="page-label-text">ISLAND<strong>PACE</strong> · EXPLORE</div>
+  </div>
+  <div class="page-content">
+    <div class="phone-col">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ip-text-3);text-align:center;">Mobile · 390px</div>
+      <div class="phone-shell">
+        <div class="phone-notch"></div>
+        <div class="phone-screen" style="transform:scale(0.41);transform-origin:top left;width:244%;height:244%;background:var(--ip-bg);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;background:var(--ip-surface);border-bottom:1px solid var(--ip-border);">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;letter-spacing:0.04em;text-transform:uppercase;">ISLAND<span style="color:var(--ip-accent);">PACE</span></div>
+            <div style="background:var(--ip-accent);color:white;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;">+ Submit</div>
+          </div>
+          <!-- Search -->
+          <div style="padding:12px 18px 0;">
+            <div style="background:var(--ip-surface);border:1.5px solid var(--ip-border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--ip-text-3);">🔍 Search sessions, clubs, locations…</div>
+          </div>
+          <!-- Chips -->
+          <div style="display:flex;gap:7px;padding:10px 18px;overflow:hidden;">
+            <div style="background:var(--ip-text);color:white;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:600;white-space:nowrap;">All</div>
+            <div style="border:1.5px solid var(--ip-border);background:var(--ip-surface);color:var(--ip-text-2);border-radius:20px;padding:6px 12px;font-size:11px;font-weight:500;white-space:nowrap;">Ride</div>
+            <div style="border:1.5px solid var(--ip-border);background:var(--ip-surface);color:var(--ip-text-2);border-radius:20px;padding:6px 12px;font-size:11px;font-weight:500;white-space:nowrap;">Run</div>
+            <div style="border:1.5px solid var(--ip-border);background:var(--ip-surface);color:var(--ip-text-2);border-radius:20px;padding:6px 12px;font-size:11px;font-weight:500;white-space:nowrap;">Coffee</div>
+          </div>
+          <!-- Result count -->
+          <div style="padding:0 18px 10px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:11px;color:var(--ip-text-3);">24 sessions found</span>
+            <span style="font-size:11px;color:var(--ip-accent);font-weight:600;">Filter ⧉</span>
+          </div>
+          <!-- Date group -->
+          <div style="padding:0 18px 8px;display:flex;align-items:center;gap:8px;">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ip-text-3);">Saturday 3 May</span>
+            <div style="flex:1;height:1px;background:var(--ip-border);"></div>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;color:var(--ip-accent);">THIS WEEKEND</span>
+          </div>
+          <!-- Cards -->
+          <div style="margin:0 18px 10px;background:var(--ip-surface);border:1px solid var(--ip-border);border-radius:12px;padding:12px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;">Colombo Coffee Loop</div><div style="background:var(--ip-text);color:white;border-radius:5px;padding:4px 7px;text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;line-height:1;">03</div><div style="font-size:7px;opacity:0.6;text-transform:uppercase;">SAT</div></div></div>
+            <div style="display:flex;gap:5px;margin-bottom:6px;"><span class="ip-badge ip-badge-ride" style="font-size:9px;">Ride</span><span style="font-size:10px;color:var(--ip-text-2);">Colombo 7 · 6:00 AM</span></div>
+            <div style="display:flex;gap:10px;padding:5px 0;border-top:1px solid var(--ip-border);border-bottom:1px solid var(--ip-border);margin-bottom:6px;"><div><div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;">42km</div><div style="font-size:8px;color:var(--ip-text-3);">DIST</div></div><div><div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;">25–28</div><div style="font-size:8px;color:var(--ip-text-3);">KM/H</div></div><div><div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--ip-green);">Social</div><div style="font-size:8px;color:var(--ip-text-3);">LEVEL</div></div></div>
+            <div style="display:flex;gap:4px;"><span class="ip-badge ip-badge-nodrop" style="font-size:9px;">No Drop</span><span class="ip-badge ip-badge-coffee" style="font-size:9px;">Coffee</span></div>
+          </div>
+          <div style="margin:0 18px 10px;background:var(--ip-surface);border:1px solid var(--ip-border);border-radius:12px;padding:12px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;">Negombo Beach Run</div><div style="background:var(--ip-text);color:white;border-radius:5px;padding:4px 7px;text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;line-height:1;">03</div><div style="font-size:7px;opacity:0.6;text-transform:uppercase;">SAT</div></div></div>
+            <div style="display:flex;gap:5px;margin-bottom:6px;"><span class="ip-badge ip-badge-run" style="font-size:9px;">Run</span><span style="font-size:10px;color:var(--ip-text-2);">Negombo · 6:30 AM</span></div>
+            <div style="display:flex;gap:4px;"><span class="ip-badge ip-badge-beginner" style="font-size:9px;">Beginner OK</span><span class="ip-badge ip-badge-tourist" style="font-size:9px;">Tourist OK</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotation-col">
+      <div class="annotation-header">
+        <div class="annotation-page-num">03 — Explore Sessions</div>
+        <div class="annotation-title">Explore Sessions</div>
+        <div class="annotation-subtitle">Filterable session discovery · Date-grouped · Real-time count</div>
+      </div>
+
+      <div class="annotation-grid">
+        <div class="annot-block">
+          <div class="annot-label">Filter System</div>
+          <div class="annot-list">
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Chip rail: Sport · Date · Location</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Difficulty · Beginner Friendly</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>No Drop · Coffee Stop</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Tourist Friendly · Women Friendly</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Advanced panel via "Filter ⧉"</span></div>
+          </div>
+        </div>
+        <div class="annot-block">
+          <div class="annot-label">Date Grouping UX</div>
+          <div class="annot-desc">Sessions grouped by date with a ruled-line separator. "THIS WEEKEND" accent label appears for Sat–Sun to surface urgency. Groups collapse once past.</div>
+          <div style="margin-top:8px;display:flex;align-items:center;gap:6px;">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ip-text-3);">Saturday 3 May</span>
+            <div style="flex:1;height:1px;background:var(--ip-border);"></div>
+            <span style="font-size:9px;font-weight:700;color:var(--ip-accent);text-transform:uppercase;">THIS WEEKEND</span>
+          </div>
+        </div>
+        <div class="annot-block">
+          <div class="annot-label">Session Card — Key Fields</div>
+          <div class="annot-list">
+            <div class="annot-list-item"><span class="annot-bullet">1.</span><span>Title (Barlow Condensed) + date chip</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">2.</span><span>Sport badge + city + start time</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">3.</span><span>Stats row: distance · pace · level</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">4.</span><span>Suitability badges (No Drop, Coffee…)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">5.</span><span>Organiser avatar + joining count</span></div>
+          </div>
+        </div>
+        <div class="annot-block">
+          <div class="annot-label">Sort Options</div>
+          <div class="annot-list">
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Date (default)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Nearest first</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Most popular (joining count)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Sport type</span></div>
+          </div>
+        </div>
+        <div class="annot-block" style="grid-column:1/-1;">
+          <div class="annot-label">Empty State</div>
+          <div class="annot-desc">When no sessions match filters: "No sessions found for these filters. Try removing a filter or <strong>submit your own.</strong>" — Always offers an action, never a dead end. Submit CTA links directly to form.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">ISLANDPACE · MVP</span>
+    <span class="footer-page">03 / 07 — Explore Sessions</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 5 — ACTIVITY DETAIL
+═══════════════════════════════════════════ -->
+<div class="page" style="break-before:page;">
+  <div class="page-label-strip">
+    <div class="page-label-text">ISLAND<strong>PACE</strong> · DETAIL</div>
+  </div>
+  <div class="page-content">
+    <div class="phone-col">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ip-text-3);text-align:center;">Mobile · 390px</div>
+      <div class="phone-shell">
+        <div class="phone-notch"></div>
+        <div class="phone-screen" style="transform:scale(0.41);transform-origin:top left;width:244%;height:244%;background:var(--ip-bg);">
+          <!-- Nav -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;background:var(--ip-surface);border-bottom:1px solid var(--ip-border);">
+            <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">←</span><span style="font-size:13px;font-weight:600;">Session Detail</span></div>
+            <div style="display:flex;gap:8px;"><span style="font-size:16px;">⬆</span><span style="font-size:16px;">•••</span></div>
+          </div>
+          <!-- Hero -->
+          <div style="background:var(--ip-text);padding:22px 18px 18px;position:relative;overflow:hidden;">
+            <div style="display:flex;gap:5px;margin-bottom:7px;"><span class="ip-badge ip-badge-ride" style="font-size:9px;">Ride</span><span class="ip-badge ip-badge-social" style="font-size:9px;">Social</span><span class="ip-badge ip-badge-coffee" style="font-size:9px;">Coffee Stop</span></div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;text-transform:uppercase;line-height:1.05;color:white;margin-bottom:6px;">Colombo Coffee Loop</div>
+            <div style="font-size:12px;color:oklch(70% 0.01 250);">Sat 3 May · 6:00 AM · Independence Square</div>
+          </div>
+          <!-- Quick stats -->
+          <div style="background:var(--ip-surface);border:1px solid var(--ip-border);border-radius:12px;margin:14px 18px 0;overflow:hidden;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;">
+              <div style="padding:12px 10px;border-right:1px solid var(--ip-border);text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;">42<span style="font-size:11px;color:var(--ip-text-3);">km</span></div><div style="font-size:8px;color:var(--ip-text-3);text-transform:uppercase;">Distance</div></div>
+              <div style="padding:12px 10px;border-right:1px solid var(--ip-border);text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;">25–28</div><div style="font-size:8px;color:var(--ip-text-3);text-transform:uppercase;">km/h avg</div></div>
+              <div style="padding:12px 10px;text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;">~2<span style="font-size:11px;color:var(--ip-text-3);">hr</span></div><div style="font-size:8px;color:var(--ip-text-3);text-transform:uppercase;">Duration</div></div>
+            </div>
+            <div style="padding:9px 12px;border-top:1px solid var(--ip-border);display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;gap:5px;"><span class="ip-badge ip-badge-nodrop" style="font-size:9px;">No Drop</span><span class="ip-badge ip-badge-beginner" style="font-size:9px;">Beginner OK</span></div>
+              <span style="font-size:11px;color:var(--ip-text-2);"><strong style="color:var(--ip-text);">12</strong> joining</span>
+            </div>
+          </div>
+          <!-- Route -->
+          <div style="padding:14px 18px;border-bottom:1px solid var(--ip-border);">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-text-2);margin-bottom:8px;">Route</div>
+            <div style="background:var(--ip-bg2);border:1px solid var(--ip-border);border-radius:7px;height:80px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+              <div style="position:absolute;inset:0;background-image:linear-gradient(var(--ip-border) 1px,transparent 1px),linear-gradient(90deg,var(--ip-border) 1px,transparent 1px);background-size:16px 16px;opacity:0.5;"></div>
+              <svg width="140" height="40" viewBox="0 0 140 40" fill="none" style="position:relative;z-index:1;"><path d="M8 32 C 30 8, 55 36, 70 18 S 112 4, 132 22" stroke="oklch(62% 0.18 38)" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="8" cy="32" r="3" fill="oklch(55% 0.14 148)"/><circle cx="132" cy="22" r="3" fill="oklch(62% 0.18 38)"/></svg>
+            </div>
+          </div>
+          <!-- Organiser -->
+          <div style="padding:12px 18px;border-bottom:1px solid var(--ip-border);">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-text-2);margin-bottom:8px;">Organiser</div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--ip-accent-lt);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--ip-accent);flex-shrink:0;">CC</div>
+              <div><div style="font-size:13px;font-weight:600;">Colombo Cycling Club</div><div style="font-size:11px;color:var(--ip-text-3);">Active since 2019 · 140 members</div></div>
+            </div>
+          </div>
+          <!-- Sticky CTA -->
+          <div style="padding:12px 18px;background:var(--ip-surface);border-top:1px solid var(--ip-border);display:flex;gap:7px;">
+            <div style="flex:2;background:var(--ip-accent);color:white;border-radius:7px;padding:10px;text-align:center;font-size:12px;font-weight:600;">I'm Interested</div>
+            <div style="flex:1;border:1.5px solid var(--ip-border);border-radius:7px;padding:10px;text-align:center;font-size:12px;">WhatsApp</div>
+            <div style="background:var(--ip-bg2);border-radius:7px;padding:10px 12px;font-size:12px;">⬆</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotation-col">
+      <div class="annotation-header">
+        <div class="annotation-page-num">04 — Activity Detail</div>
+        <div class="annotation-title">Activity Detail</div>
+        <div class="annotation-subtitle">Most important page · "Is this for me? How do I join?"</div>
+      </div>
+
+      <div class="annotation-grid">
+        <div class="annot-block annot-block-dark">
+          <div class="annot-label annot-label-dark">Above The Fold</div>
+          <div class="annot-desc annot-desc-light">Hero shows: badge strip → title → date/time/location. Quick-stats card immediately below: distance, pace, duration, participant count. All decision-critical info without scrolling.</div>
+        </div>
+        <div class="annot-block annot-block-accent">
+          <div class="annot-label">Sticky CTA Strip</div>
+          <div class="annot-desc">Permanently pinned to bottom. Three actions always accessible:<br/><strong>I'm Interested</strong> · <strong>WhatsApp</strong> · <strong>Share</strong>. User never loses the action even when reading safety notes.</div>
+        </div>
+        <div class="annot-block">
+          <div class="annot-label">Page Sections</div>
+          <div class="annot-list">
+            <div class="annot-list-item"><span class="annot-bullet">1.</span><span>Badge strip + Title hero (dark)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">2.</span><span>Quick stats card (3-up grid)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">3.</span><span>Route map placeholder + endpoints</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">4.</span><span>Suitability badges + description</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">5.</span><span>Organiser card + contact buttons</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">6.</span><span>Safety notes</span></div>
+          </div>
+        </div>
+        <div class="annot-block">
+          <div class="annot-label">Visibility Controls</div>
+          <div class="annot-list">
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span><strong>Activity:</strong> Public / Unlisted / Private</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span><strong>Attendees:</strong> Count only / Names / Hidden</span></div>
+            <div class="annot-list-item"><span class="annot-bullet annot-bullet-green">✓</span><span>Default: Public + count only</span></div>
+          </div>
+        </div>
+        <div class="annot-block" style="grid-column:1/-1;">
+          <div class="annot-label">Quick Stats Card — Reference</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid var(--ip-border);border-radius:8px;overflow:hidden;max-width:320px;">
+            <div style="padding:10px;border-right:1px solid var(--ip-border);text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;">42<span style="font-size:11px;font-weight:400;color:var(--ip-text-3);">km</span></div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;">Distance</div></div>
+            <div style="padding:10px;border-right:1px solid var(--ip-border);text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;">25–28</div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;">km/h avg</div></div>
+            <div style="padding:10px;text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;">~2<span style="font-size:11px;font-weight:400;color:var(--ip-text-3);">hr</span></div><div style="font-size:9px;color:var(--ip-text-3);text-transform:uppercase;">Duration</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">ISLANDPACE · MVP</span>
+    <span class="footer-page">04 / 07 — Activity Detail</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 6 — SUBMIT FORM
+═══════════════════════════════════════════ -->
+<div class="page" style="break-before:page;">
+  <div class="page-label-strip">
+    <div class="page-label-text">ISLAND<strong>PACE</strong> · SUBMIT</div>
+  </div>
+  <div class="page-content">
+    <div class="phone-col">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ip-text-3);text-align:center;">Step 1 of 3</div>
+      <div class="phone-shell">
+        <div class="phone-notch"></div>
+        <div class="phone-screen" style="transform:scale(0.41);transform-origin:top left;width:244%;height:244%;background:var(--ip-bg);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;background:var(--ip-surface);border-bottom:1px solid var(--ip-border);">
+            <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">←</span><span style="font-size:13px;font-weight:600;">Submit a Session</span></div>
+            <span style="font-size:16px;color:var(--ip-text-3);">✕</span>
+          </div>
+          <!-- Stepper -->
+          <div style="display:flex;align-items:center;gap:0;padding:14px 18px;">
+            <div style="flex:1;height:3px;background:var(--ip-accent);"></div>
+            <div style="width:7px;"></div>
+            <div style="flex:1;height:3px;background:var(--ip-border);"></div>
+            <div style="width:7px;"></div>
+            <div style="flex:1;height:3px;background:var(--ip-border);"></div>
+          </div>
+          <div style="font-size:11px;color:var(--ip-text-3);padding:0 18px 14px;"><strong style="color:var(--ip-text);">Step 1 of 3</strong> — Core Details</div>
+          <!-- Fields -->
+          <div style="padding:0 18px;display:flex;flex-direction:column;gap:14px;">
+            <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-text-2);margin-bottom:4px;">Activity Title</div><div style="background:var(--ip-surface);border:1.5px solid var(--ip-border);border-radius:7px;padding:10px 12px;font-size:13px;color:var(--ip-text-3);">e.g. Colombo Coffee Loop</div></div>
+            <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-text-2);margin-bottom:4px;">Activity Type</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;">
+                <div style="padding:9px;border-radius:7px;font-size:12px;font-weight:600;border:2px solid var(--ip-accent);background:var(--ip-accent-lt);color:var(--ip-accent);text-align:center;">Ride</div>
+                <div style="padding:9px;border-radius:7px;font-size:12px;font-weight:600;border:1.5px solid var(--ip-border);background:var(--ip-surface);color:var(--ip-text-2);text-align:center;">Run</div>
+                <div style="padding:9px;border-radius:7px;font-size:12px;font-weight:600;border:1.5px solid var(--ip-border);background:var(--ip-surface);color:var(--ip-text-2);text-align:center;">Tri</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-text-2);margin-bottom:4px;">Date</div><div style="background:var(--ip-surface);border:1.5px solid var(--ip-border);border-radius:7px;padding:10px 12px;font-size:13px;color:var(--ip-text);">3 May 2026</div></div>
+              <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-text-2);margin-bottom:4px;">Start Time</div><div style="background:var(--ip-surface);border:1.5px solid var(--ip-border);border-radius:7px;padding:10px 12px;font-size:13px;color:var(--ip-text);">06:00 AM</div></div>
+            </div>
+            <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-text-2);margin-bottom:4px;">Difficulty</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;">
+                <div style="padding:7px 4px;border-radius:5px;font-size:10px;font-weight:600;border:1.5px solid var(--ip-border);background:var(--ip-surface);color:var(--ip-text-2);text-align:center;text-transform:uppercase;">Easy</div>
+                <div style="padding:7px 4px;border-radius:5px;font-size:10px;font-weight:600;border:2px solid var(--ip-text);background:var(--ip-text);color:white;text-align:center;text-transform:uppercase;">Social</div>
+                <div style="padding:7px 4px;border-radius:5px;font-size:10px;font-weight:600;border:1.5px solid var(--ip-border);background:var(--ip-surface);color:var(--ip-text-2);text-align:center;text-transform:uppercase;">Mod.</div>
+                <div style="padding:7px 4px;border-radius:5px;font-size:10px;font-weight:600;border:1.5px solid var(--ip-border);background:var(--ip-surface);color:var(--ip-text-2);text-align:center;text-transform:uppercase;">Hard</div>
+              </div>
+            </div>
+          </div>
+          <!-- Nav buttons -->
+          <div style="position:absolute;bottom:0;left:0;right:0;background:var(--ip-surface);border-top:1px solid var(--ip-border);padding:12px 18px;">
+            <div style="background:var(--ip-accent);color:white;border-radius:7px;padding:11px;text-align:center;font-size:13px;font-weight:600;">Continue →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotation-col">
+      <div class="annotation-header">
+        <div class="annotation-page-num">05 — Submit Activity Form</div>
+        <div class="annotation-title">Submit Activity</div>
+        <div class="annotation-subtitle">3-step progressive form · Mobile-first · Feels fast</div>
+      </div>
+
+      <div class="annotation-grid three-col">
+        <div class="annot-block">
+          <div class="annot-label">Step 1 — Core Details</div>
+          <div class="annot-list">
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Activity title</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Type: Ride / Run / Triathlon</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Date + Start time</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>City / area (dropdown)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Start location</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Difficulty (4-way toggle)</span></div>
+          </div>
+        </div>
+        <div class="annot-block">
+          <div class="annot-label">Step 2 — Session Details</div>
+          <div class="annot-list">
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Distance + Duration</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Pace / average speed</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Route link (Strava/Komoot)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet annot-bullet-green">✓</span><span>Coffee Stop (toggle)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet annot-bullet-green">✓</span><span>No Drop (toggle)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Beginner / Women / Tourist friendly</span></div>
+          </div>
+        </div>
+        <div class="annot-block">
+          <div class="annot-label">Step 3 — Organiser</div>
+          <div class="annot-list">
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Organiser name / club</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>WhatsApp contact</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Strava club link (optional)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Visibility: Public / Unlisted / Private</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Attendee visibility dropdown</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <!-- Stepper visual -->
+        <div class="annot-block" style="flex:1;">
+          <div class="annot-label">Progress Stepper</div>
+          <div style="display:flex;align-items:center;gap:6px;margin:8px 0;">
+            <div style="flex:1;height:4px;background:var(--ip-accent);border-radius:2px;"></div>
+            <div style="width:6px;"></div>
+            <div style="flex:1;height:4px;background:var(--ip-border);border-radius:2px;"></div>
+            <div style="width:6px;"></div>
+            <div style="flex:1;height:4px;background:var(--ip-border);border-radius:2px;"></div>
+          </div>
+          <div class="annot-desc">Three-segment progress bar. No numbers — just a clear sense of position. Each step is a single screen scroll.</div>
+        </div>
+        <div class="annot-block" style="flex:1.5;">
+          <div class="annot-label">UX Principles</div>
+          <div class="annot-list">
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>No step feels long — max 6 fields per screen</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Toggles for binary features (not checkboxes)</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Optional fields collapsed under "Add more details"</span></div>
+            <div class="annot-list-item"><span class="annot-bullet">→</span><span>Sticky Continue/Submit button always visible</span></div>
+            <div class="annot-list-item"><span class="annot-bullet annot-bullet-green">✓</span><span>Goal: submit complete in under 2 minutes</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">ISLANDPACE · MVP</span>
+    <span class="footer-page">05 / 07 — Submit Activity</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 7 — CONCEPT A vs CONCEPT B
+═══════════════════════════════════════════ -->
+<div class="page" style="break-before:page;">
+  <div class="page-label-strip">
+    <div class="page-label-text">ISLAND<strong>PACE</strong> · CONCEPTS</div>
+  </div>
+  <div class="page-content">
+    <div class="annotation-col" style="padding:18px 22px;gap:12px;">
+      <div class="annotation-header">
+        <div class="annotation-page-num">06–07 — Design Concepts</div>
+        <div class="annotation-title">Two Alternative Directions</div>
+        <div class="annotation-subtitle">Concept A vs Concept B — Choose or blend</div>
+      </div>
+
+      <div style="display:flex;gap:16px;flex:1;overflow:hidden;">
+        <!-- Concept A -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:10px;overflow:hidden;">
+          <div class="annot-block annot-block-dark">
+            <div class="annot-label annot-label-dark">Concept A</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:white;text-transform:uppercase;letter-spacing:0.04em;">Ultra-Minimal Premium</div>
+            <div class="annot-desc annot-desc-light">Rapha × Monocle. Editorial restraint. No cards — ruled lines only.</div>
+          </div>
+
+          <!-- Mini A preview -->
+          <div style="background:oklch(98% 0.004 80);border:1px solid oklch(90% 0.008 75);border-radius:8px;padding:14px;flex:1;overflow:hidden;">
+            <div style="font-size:9px;color:#bbb;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-bottom:4px;">ISLAND<span style="color:oklch(62% 0.18 38);">PACE</span></div>
+            <div style="font-size:9px;color:oklch(62% 0.18 38);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Sri Lanka · May 2026</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;line-height:0.92;text-transform:uppercase;color:oklch(14% 0.01 250);margin-bottom:10px;">Find Your<br/>Next Ride<br/><span style="color:oklch(62% 0.18 38);">or Run.</span></div>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">
+              <span style="background:oklch(14% 0.01 250);color:white;font-size:9px;font-weight:700;padding:5px 10px;border-radius:4px;">Explore</span>
+              <span style="color:oklch(62% 0.18 38);font-size:9px;font-weight:700;text-decoration:underline;text-underline-offset:2px;">Submit →</span>
+            </div>
+            <div style="border-bottom:1px solid oklch(90% 0.008 75);">
+              <div class="ca-list-item"><div class="ca-date">SAT<br/>3</div><div class="ca-divider"></div><div><div class="ca-title">Colombo Coffee Loop</div><div class="ca-meta">6:00 AM · 42 km · 25–28 km/h</div></div><span class="ip-badge ip-badge-coffee" style="font-size:8px;margin-left:auto;">☕</span></div>
+              <div class="ca-list-item"><div class="ca-date" style="color:oklch(65% 0.01 250);">SAT<br/>3</div><div class="ca-divider"></div><div><div class="ca-title">Negombo Beach Run</div><div class="ca-meta">6:30 AM · 10 km · Social</div></div><span class="ip-badge ip-badge-run" style="font-size:8px;margin-left:auto;">Run</span></div>
+              <div class="ca-list-item"><div class="ca-date" style="color:oklch(65% 0.01 250);">SUN<br/>4</div><div class="ca-divider"></div><div><div class="ca-title">Galle Face Sunrise Roll</div><div class="ca-meta">5:45 AM · 28 km · Social</div></div><span class="ip-badge ip-badge-ride" style="font-size:8px;margin-left:auto;">Ride</span></div>
+            </div>
+          </div>
+
+          <div class="annot-block">
+            <div class="annot-label">Key Traits</div>
+            <div class="annot-list">
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Ruled-line list, zero card borders</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Maximum white space</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Date in coral, title in near-black</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>No heavy decoration</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Best for: premium / expat audience</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div style="width:1px;background:var(--ip-border);flex-shrink:0;"></div>
+
+        <!-- Concept B -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:10px;overflow:hidden;">
+          <div style="background:oklch(20% 0.05 250);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:9px;color:oklch(55% 0.01 250);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;margin-bottom:2px;">Concept B</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:white;text-transform:uppercase;letter-spacing:0.04em;">Sporty Community Board</div>
+            <div style="font-size:11px;color:oklch(65% 0.02 250);margin-top:3px;">Bold navy base · Green accent · Community energy</div>
+          </div>
+
+          <!-- Mini B preview -->
+          <div style="background:oklch(96% 0.01 240);border:1px solid var(--ip-border);border-radius:8px;overflow:hidden;flex:1;">
+            <div class="cb-header">
+              <div class="cb-logo">ISLAND<span>PACE</span></div>
+            </div>
+            <div class="cb-hero">
+              <div class="cb-hero-title">Your Next<br/><span>Sri Lanka</span><br/>Adventure.</div>
+              <div class="cb-scoreboard">
+                <div class="cb-score-item"><div class="cb-score-num">8</div><div class="cb-score-lbl">Weekend</div></div>
+                <div class="cb-score-item"><div class="cb-score-num">24</div><div class="cb-score-lbl">This Week</div></div>
+                <div class="cb-score-item"><div class="cb-score-num">6</div><div class="cb-score-lbl">Clubs</div></div>
+              </div>
+            </div>
+            <div style="padding:8px 12px;display:flex;gap:5px;background:oklch(96% 0.01 240);">
+              <div style="background:oklch(20% 0.05 250);color:white;border-radius:14px;padding:4px 10px;font-size:9px;font-weight:700;">All</div>
+              <div style="border:1px solid var(--ip-border);background:white;border-radius:14px;padding:4px 10px;font-size:9px;font-weight:600;color:oklch(42% 0.015 240);">Ride</div>
+              <div style="border:1px solid var(--ip-border);background:white;border-radius:14px;padding:4px 10px;font-size:9px;font-weight:600;color:oklch(42% 0.015 240);">Run</div>
+              <div style="border:1px solid var(--ip-border);background:white;border-radius:14px;padding:4px 10px;font-size:9px;font-weight:600;color:oklch(42% 0.015 240);">Coffee</div>
+            </div>
+            <div class="cb-card">
+              <div style="display:flex;justify-content:space-between;"><div><div class="cb-card-title">Colombo Coffee Loop</div><div style="display:flex;gap:4px;margin-top:3px;"><span class="ip-badge ip-badge-ride" style="font-size:8px;">Ride</span><span style="font-size:9px;color:oklch(55% 0.01 250);">6:00 AM</span></div></div><div style="background:oklch(20% 0.05 250);color:white;border-radius:5px;padding:3px 6px;text-align:center;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;line-height:1;">03</div><div style="font-size:7px;opacity:0.6;text-transform:uppercase;">SAT</div></div></div>
+              <div style="display:flex;gap:8px;padding:5px 0;border-top:1px solid oklch(94% 0.008 240);border-bottom:1px solid oklch(94% 0.008 240);margin:5px 0;"><div><div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;">42km</div><div style="font-size:8px;color:oklch(55% 0.01 250);">DIST</div></div><div><div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;">25–28</div><div style="font-size:8px;color:oklch(55% 0.01 250);">KM/H</div></div><div style="margin-left:auto;font-size:10px;"><strong>12</strong> joining</div></div>
+              <div style="display:flex;gap:3px;"><span class="ip-badge ip-badge-nodrop" style="font-size:8px;">No Drop</span><span class="ip-badge ip-badge-coffee" style="font-size:8px;">Coffee</span></div>
+            </div>
+          </div>
+
+          <div class="annot-block">
+            <div class="annot-label">Key Traits</div>
+            <div class="annot-list">
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Dark navy header — bold community feel</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Green accent (active / vitality)</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Scoreboard widget for community pulse</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Heavier card borders + shadows</span></div>
+              <div class="annot-list-item"><span class="annot-bullet">→</span><span>Best for: local riders, club members</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">ISLANDPACE · MVP</span>
+    <span class="footer-page">06–07 / 07 — Design Concepts A &amp; B</span>
+  </div>
+</div>
+
+<script>
+  // Wait for fonts + layout, then print
+  document.fonts.ready.then(function() {
+    setTimeout(function() {
+      window.print();
+    }, 800);
+  });
+</script>
+</body>
+</html>

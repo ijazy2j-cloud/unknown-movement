@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unknown Movement — UX/UI Direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #111; font-family: 'Geist', system-ui, sans-serif; }
+  #root { width: 100%; height: 100%; }
+
+  /* ── Unknown Movement Design Tokens ── */
+  :root {
+    --um-bg:        oklch(97.2% 0.004 240);
+    --um-bg2:       oklch(94% 0.005 230);
+    --um-surface:   oklch(99.5% 0.002 240);
+    --um-border:    oklch(89% 0.006 230);
+    --um-border-lt: oklch(93% 0.004 230);
+    --um-text:      oklch(11% 0.008 250);
+    --um-text-2:    oklch(40% 0.01 240);
+    --um-text-3:    oklch(60% 0.008 230);
+    --um-text-4:    oklch(75% 0.006 220);
+    --um-accent:    oklch(62% 0.18 38);
+    --um-accent-lt: oklch(94% 0.06 60);
+    --um-radius:    6px;
+    --um-radius-lg: 10px;
+    --um-shadow:    0 1px 3px oklch(11% 0.008 250 / 0.05), 0 4px 12px oklch(11% 0.008 250 / 0.04);
+    --um-shadow-md: 0 2px 8px oklch(11% 0.008 250 / 0.08), 0 8px 24px oklch(11% 0.008 250 / 0.06);
+  }
+
+  /* ── Screen shell ── */
+  .um-screen {
+    background: var(--um-bg);
+    font-family: 'Geist', system-ui, sans-serif;
+    color: var(--um-text);
+    width: 390px;
+    min-height: 844px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scrollbar-width: none;
+  }
+  .um-screen::-webkit-scrollbar { display: none; }
+
+  /* ── Nav ── */
+  .um-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 16px;
+    background: var(--um-surface);
+    border-bottom: 1px solid var(--um-border-lt);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .um-logo {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-style: normal;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    color: var(--um-text);
+  }
+  .um-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .um-nav-link {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--um-text-3);
+    letter-spacing: 0.01em;
+  }
+  .um-nav-cta {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--um-text);
+    letter-spacing: 0.01em;
+    border-bottom: 1px solid var(--um-text);
+    padding-bottom: 1px;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    cursor: pointer;
+  }
+  .um-nav-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--um-text-3);
+    font-weight: 400;
+  }
+
+  /* ── Badges — smaller, quieter ── */
+  .um-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .um-badge-ride    { background: oklch(94% 0.05 42);  color: oklch(38% 0.10 42); }
+  .um-badge-run     { background: oklch(93% 0.04 220);  color: oklch(36% 0.09 220); }
+  .um-badge-tri     { background: oklch(93% 0.04 290);  color: oklch(36% 0.09 290); }
+  .um-badge-social  { background: var(--um-bg2);        color: var(--um-text-2);    border: 1px solid var(--um-border); }
+  .um-badge-coffee  { background: oklch(95% 0.04 72);   color: oklch(40% 0.10 60); }
+  .um-badge-nodrop  { background: oklch(93% 0.04 148);  color: oklch(36% 0.09 148); }
+  .um-badge-tourist { background: oklch(93% 0.04 260);  color: oklch(36% 0.09 260); }
+  .um-badge-beginner{ background: oklch(93% 0.04 148);  color: oklch(36% 0.09 148); }
+  .um-badge-hard    { background: oklch(94% 0.04 20);   color: oklch(36% 0.10 20); }
+  .um-badge-women   { background: oklch(94% 0.04 340);  color: oklch(36% 0.09 340); }
+  .um-badge-tag     { background: var(--um-bg2);        color: var(--um-text-3);   border: 1px solid var(--um-border); }
+
+  /* ── Buttons ── */
+  .um-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 12px 22px;
+    border-radius: var(--um-radius);
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .um-btn-primary   { background: var(--um-text);   color: white; }
+  .um-btn-outline   { background: transparent; color: var(--um-text); border: 1px solid var(--um-border); }
+  .um-btn-ghost     { background: var(--um-bg2); color: var(--um-text-2); }
+  .um-btn-accent    { background: var(--um-accent);  color: white; }
+  .um-btn-full      { width: 100%; }
+  .um-btn-sm        { font-size: 12px; padding: 9px 16px; }
+
+  /* ── Image placeholder — athlete imagery ── */
+  .um-img-placeholder {
+    position: relative;
+    overflow: hidden;
+    background: var(--um-bg2);
+  }
+  .um-img-stripes {
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--um-border-lt) 0px,
+      var(--um-border-lt) 1px,
+      transparent 1px,
+      transparent 12px
+    );
+  }
+  .um-img-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: monospace;
+    font-size: 10px;
+    color: var(--um-text-4);
+    letter-spacing: 0.04em;
+    text-align: center;
+    line-height: 1.6;
+    z-index: 1;
+  }
+
+  /* ── Hero ── */
+  .um-hero {
+    position: relative;
+    background: var(--um-text);
+    color: white;
+    overflow: hidden;
+  }
+  .um-hero-img {
+    width: 100%;
+    height: 280px;
+    position: relative;
+  }
+  .um-hero-img-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, oklch(11% 0.008 250 / 0.1) 0%, oklch(11% 0.008 250 / 0.75) 100%);
+    z-index: 1;
+  }
+  .um-hero-content {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 0 24px 28px;
+    z-index: 2;
+  }
+  .um-hero-eyebrow {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: oklch(78% 0.12 42);
+    margin-bottom: 10px;
+  }
+  .um-hero-title {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 1.12;
+    color: white;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .um-hero-title em {
+    font-style: normal;
+    font-weight: 300;
+    color: oklch(87% 0.10 42);
+  }
+  .um-hero-sub {
+    font-size: 13px;
+    color: oklch(72% 0.005 240);
+    line-height: 1.6;
+    margin-bottom: 22px;
+    font-weight: 400;
+  }
+  .um-hero-btns { display: flex; gap: 10px; }
+  .um-hero-btn-primary {
+    background: white; color: var(--um-text);
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 13px; font-weight: 500;
+    padding: 11px 22px; border-radius: var(--um-radius); border: none;
+    cursor: pointer; letter-spacing: 0.01em;
+  }
+  .um-hero-btn-secondary {
+    background: transparent; color: white;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 13px; font-weight: 400;
+    padding: 11px 22px; border-radius: var(--um-radius);
+    border: 1px solid oklch(100% 0 0 / 0.25);
+    cursor: pointer; letter-spacing: 0.01em;
+  }
+
+  /* ── Divider label ── */
+  .um-divider-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 22px 12px;
+  }
+  .um-divider-label-text {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--um-text-3);
+    white-space: nowrap;
+  }
+  .um-divider-line { flex: 1; height: 1px; background: var(--um-border-lt); }
+
+  /* ── Session row (ruled list style) ── */
+  .um-session-row {
+    display: flex;
+    align-items: stretch;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--um-border-lt);
+    cursor: pointer;
+    transition: background 0.12s;
+    gap: 16px;
+  }
+  .um-session-row:hover { background: var(--um-surface); }
+  .um-session-date-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 36px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+  .um-session-day {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1;
+    color: var(--um-text);
+  }
+  .um-session-dow {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--um-text-4);
+    margin-top: 2px;
+  }
+  .um-session-bar {
+    width: 1px;
+    background: var(--um-border-lt);
+    flex-shrink: 0;
+    margin: 0 4px;
+  }
+  .um-session-body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .um-session-title {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--um-text);
+    letter-spacing: -0.01em;
+  }
+  .um-session-meta {
+    font-size: 12px;
+    color: var(--um-text-3);
+    font-weight: 400;
+    line-height: 1.4;
+  }
+  .um-session-stats {
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+    margin-top: 4px;
+  }
+  .um-session-stat-val {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--um-text);
+  }
+  .um-session-stat-lbl {
+    font-size: 10px;
+    color: var(--um-text-4);
+    margin-left: 2px;
+  }
+  .um-session-dot { width: 2px; height: 2px; border-radius: 50%; background: var(--um-border); flex-shrink: 0; align-self: center; }
+  .um-session-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+  .um-session-tail {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 6px;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+  .um-session-time {
+    font-size: 12px;
+    color: var(--um-text-3);
+    font-weight: 400;
+  }
+  .um-session-joining {
+    font-size: 11px;
+    color: var(--um-text-4);
+  }
+  .um-session-joining strong { color: var(--um-text-2); font-weight: 500; }
+
+  /* ── Filter chips — minimal ── */
+  .um-chips {
+    display: flex;
+    gap: 6px;
+    padding: 14px 22px 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--um-border-lt);
+  }
+  .um-chips::-webkit-scrollbar { display: none; }
+  .um-chip {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--um-border);
+    background: transparent;
+    color: var(--um-text-3);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.12s;
+    letter-spacing: 0.01em;
+  }
+  .um-chip.active {
+    background: var(--um-text);
+    color: white;
+    border-color: var(--um-text);
+  }
+
+  /* ── Stats strip ── */
+  .um-stats-strip {
+    display: flex;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--um-border-lt);
+    background: var(--um-surface);
+    gap: 0;
+  }
+  .um-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-right: 1px solid var(--um-border-lt);
+    padding: 0 8px;
+  }
+  .um-stat:first-child { align-items: flex-start; padding-left: 0; }
+  .um-stat:last-child  { border-right: none; }
+  .um-stat-num {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--um-text);
+    line-height: 1;
+  }
+  .um-stat-lbl {
+    font-size: 10px;
+    color: var(--um-text-4);
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  /* ── Section label ── */
+  .um-section-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 20px 22px 0;
+  }
+  .um-section-title {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--um-text);
+    letter-spacing: -0.01em;
+  }
+  .um-section-link {
+    font-size: 11px;
+    color: var(--um-text-3);
+    font-weight: 400;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--um-border);
+    cursor: pointer;
+  }
+
+  /* ── Event card — calendar style ── */
+  .um-event-row {
+    display: flex;
+    gap: 14px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--um-border-lt);
+    align-items: flex-start;
+    cursor: pointer;
+  }
+  .um-event-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 36px;
+  }
+  .um-event-d {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1;
+    color: var(--um-text);
+  }
+  .um-event-m {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--um-text-4);
+    margin-top: 2px;
+  }
+  .um-event-body { flex: 1; }
+  .um-event-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--um-text);
+    line-height: 1.3;
+  }
+  .um-event-meta { font-size: 12px; color: var(--um-text-3); margin-top: 3px; }
+
+  /* ── Club row ── */
+  .um-club-row {
+    display: flex;
+    gap: 14px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--um-border-lt);
+    align-items: center;
+    cursor: pointer;
+  }
+  .um-club-mark {
+    width: 40px; height: 40px;
+    border-radius: 6px;
+    background: var(--um-text);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 15px;
+    color: white;
+    flex-shrink: 0;
+  }
+  .um-club-name { font-size: 14px; font-weight: 500; color: var(--um-text); }
+  .um-club-meta { font-size: 12px; color: var(--um-text-3); margin-top: 2px; }
+
+  /* ── Submit CTA block ── */
+  .um-submit-cta {
+    margin: 20px 22px 36px;
+    padding: 24px 22px;
+    border: 1px solid var(--um-border);
+    border-radius: var(--um-radius-lg);
+    background: var(--um-surface);
+  }
+  .um-submit-cta-title {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--um-text);
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .um-submit-cta-sub {
+    font-size: 13px;
+    color: var(--um-text-3);
+    line-height: 1.55;
+    margin-bottom: 18px;
+    font-weight: 400;
+  }
+
+  /* ── Detail page ── */
+  .um-detail-hero {
+    position: relative;
+    overflow: hidden;
+  }
+  .um-detail-hero-img {
+    width: 100%;
+    height: 220px;
+    position: relative;
+  }
+  .um-detail-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, oklch(11% 0.008 250 / 0.05) 0%, oklch(11% 0.008 250 / 0.70) 100%);
+    z-index: 1;
+  }
+  .um-detail-hero-content {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 0 22px 20px;
+    z-index: 2;
+    color: white;
+  }
+  .um-detail-title {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1.15;
+    color: white;
+    letter-spacing: -0.01em;
+    margin: 8px 0 4px;
+  }
+  .um-detail-meta {
+    font-size: 12px;
+    color: oklch(72% 0.005 240);
+    line-height: 1.5;
+  }
+  .um-quick-stat-row {
+    display: flex;
+    border-bottom: 1px solid var(--um-border-lt);
+    background: var(--um-surface);
+  }
+  .um-qs {
+    flex: 1;
+    padding: 16px 12px;
+    border-right: 1px solid var(--um-border-lt);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .um-qs:last-child { border-right: none; }
+  .um-qs-num {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--um-text);
+    line-height: 1;
+  }
+  .um-qs-unit { font-size: 12px; color: var(--um-text-3); }
+  .um-qs-lbl { font-size: 10px; color: var(--um-text-4); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+
+  .um-section { padding: 20px 22px; border-bottom: 1px solid var(--um-border-lt); }
+  .um-section-hd {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--um-text-4);
+    margin-bottom: 12px;
+  }
+
+  /* ── Suitability pills ── */
+  .um-suit-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* ── Organiser ── */
+  .um-org-row { display: flex; gap: 12px; align-items: flex-start; }
+  .um-org-mark {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--um-bg2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 15px; color: var(--um-text-2);
+    flex-shrink: 0;
+    border: 1px solid var(--um-border);
+  }
+  .um-org-name { font-size: 14px; font-weight: 500; color: var(--um-text); }
+  .um-org-sub { font-size: 12px; color: var(--um-text-3); margin-top: 2px; }
+  .um-org-btns { display: flex; gap: 8px; margin-top: 10px; }
+
+  /* ── Safety notes ── */
+  .um-notes { display: flex; flex-direction: column; gap: 8px; }
+  .um-note {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--um-text-2);
+    line-height: 1.5;
+    align-items: flex-start;
+  }
+  .um-note-dash { color: var(--um-text-4); flex-shrink: 0; }
+
+  /* ── Sticky CTA ── */
+  .um-cta-strip {
+    position: sticky;
+    bottom: 0;
+    background: var(--um-surface);
+    border-top: 1px solid var(--um-border-lt);
+    padding: 14px 22px;
+    display: flex;
+    gap: 8px;
+  }
+
+  /* ── Form ── */
+  .um-stepper { display: flex; gap: 6px; padding: 18px 22px 0; }
+  .um-step-seg {
+    flex: 1; height: 2px; border-radius: 1px;
+    background: var(--um-border-lt);
+  }
+  .um-step-seg.active { background: var(--um-text); }
+  .um-step-label {
+    font-size: 11px;
+    color: var(--um-text-4);
+    padding: 8px 22px 18px;
+    font-weight: 400;
+  }
+  .um-step-label strong { color: var(--um-text); font-weight: 500; }
+  .um-form-body { padding: 0 22px 120px; display: flex; flex-direction: column; gap: 20px; }
+  .um-field { display: flex; flex-direction: column; gap: 6px; }
+  .um-field-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--um-text-3);
+  }
+  .um-input {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 14px;
+    color: var(--um-text);
+    background: var(--um-surface);
+    border: 1px solid var(--um-border);
+    border-radius: var(--um-radius);
+    padding: 12px 14px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+  .um-input::placeholder { color: var(--um-text-4); }
+  .um-input:focus { border-color: var(--um-text); }
+  .um-select {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 14px;
+    color: var(--um-text);
+    background: var(--um-surface);
+    border: 1px solid var(--um-border);
+    border-radius: var(--um-radius);
+    padding: 12px 14px;
+    outline: none;
+    width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+  .um-type-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .um-type-btn {
+    padding: 11px 8px;
+    border-radius: var(--um-radius);
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    border: 1px solid var(--um-border);
+    background: var(--um-surface);
+    color: var(--um-text-2);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.12s;
+  }
+  .um-type-btn.sel {
+    border-color: var(--um-text);
+    background: var(--um-text);
+    color: white;
+  }
+  .um-diff-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; }
+  .um-diff-btn {
+    padding: 9px 4px;
+    border-radius: var(--um-radius);
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    border: 1px solid var(--um-border);
+    background: var(--um-surface);
+    color: var(--um-text-3);
+    cursor: pointer;
+    text-align: center;
+  }
+  .um-diff-btn.sel {
+    border-color: var(--um-text);
+    background: var(--um-text);
+    color: white;
+  }
+  .um-toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--um-border-lt);
+  }
+  .um-toggle-row:last-child { border-bottom: none; }
+  .um-toggle-name { font-size: 13px; color: var(--um-text); font-weight: 400; }
+  .um-toggle-desc { font-size: 11px; color: var(--um-text-4); margin-top: 1px; }
+  .um-toggle {
+    width: 36px; height: 22px; border-radius: 11px;
+    flex-shrink: 0;
+    position: relative;
+    cursor: pointer;
+    border: none;
+  }
+  .um-toggle.on { background: var(--um-text); }
+  .um-toggle.off { background: var(--um-border); }
+  .um-toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: white;
+    transition: left 0.15s;
+  }
+  .um-toggle.on::after  { left: auto; right: 2px; }
+  .um-toggle.off::after { left: 2px; }
+  .um-radio-col { display: flex; flex-direction: column; gap: 10px; }
+  .um-radio-row { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .um-radio-dot {
+    width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; margin-top: 2px;
+    border: 1.5px solid var(--um-border);
+  }
+  .um-radio-dot.sel { border-color: var(--um-text); background: var(--um-text); box-shadow: inset 0 0 0 3px white; }
+  .um-radio-label { font-size: 13px; color: var(--um-text); font-weight: 400; }
+  .um-radio-sub { font-size: 11px; color: var(--um-text-4); margin-top: 1px; }
+  .um-form-nav {
+    position: sticky; bottom: 0;
+    background: var(--um-surface);
+    border-top: 1px solid var(--um-border-lt);
+    padding: 14px 22px;
+    display: flex; gap: 8px;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+/* ─────────────────────────────────────
+   SHARED: Athlete image placeholder
+───────────────────────────────────── */
+function AthletePlaceholder({ height = 280, label = "athlete photo\nrunner or cyclist\non location" }) {
+  return (
+    <div className="um-img-placeholder" style={{ height }}>
+      <div className="um-img-stripes"></div>
+      <div className="um-img-label" style={{ whiteSpace: 'pre-line' }}>{label}</div>
+    </div>
+  );
+}
+
+function Badge({ type, children }) {
+  return <span className={`um-badge um-badge-${type}`}>{children}</span>;
+}
+
+/* ─────────────────────────────────────
+   NAV
+───────────────────────────────────── */
+function Nav({ back, title }) {
+  return (
+    <div className="um-nav">
+      {back ? (
+        <div className="um-nav-back">
+          <span style={{ fontSize: 18, lineHeight: 1 }}>←</span>
+          <span>{title || 'Back'}</span>
+        </div>
+      ) : (
+        <div className="um-logo">Unknown Movement</div>
+      )}
+      <div className="um-nav-right">
+        {back ? (
+          <><button className="um-nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Share</button>
+          <button className="um-nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>···</button></>
+        ) : (
+          <><span className="um-nav-link">Explore</span>
+          <button className="um-nav-cta">Submit</button></>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────
+   SESSION ROW COMPONENT
+───────────────────────────────────── */
+function SessionRow({ title, type, day, dow, time, location, km, pace, difficulty, joining, tags = [] }) {
+  const diffColor = difficulty === 'Hard'
+    ? 'oklch(38% 0.10 20)'
+    : difficulty === 'Social'
+    ? 'oklch(36% 0.09 148)'
+    : 'var(--um-text-2)';
+
+  return (
+    <div className="um-session-row">
+      <div className="um-session-date-col">
+        <span className="um-session-day">{day}</span>
+        <span className="um-session-dow">{dow}</span>
+      </div>
+      <div className="um-session-bar"></div>
+      <div className="um-session-body">
+        <div className="um-session-title">{title}</div>
+        <div className="um-session-meta">{time} · {location}</div>
+        <div className="um-session-stats">
+          <span className="um-session-stat-val">{km}<span className="um-session-stat-lbl"> km</span></span>
+          <span className="um-session-dot"></span>
+          <span className="um-session-stat-val">{pace}</span>
+          <span className="um-session-dot"></span>
+          <span className="um-session-stat-val" style={{ color: diffColor }}>{difficulty}</span>
+        </div>
+        {tags.length > 0 && (
+          <div className="um-session-badges">
+            <Badge type={type === 'Ride' ? 'ride' : type === 'Run' ? 'run' : 'tri'}>{type}</Badge>
+            {tags.map(t => <Badge key={t.label} type={t.type}>{t.label}</Badge>)}
+          </div>
+        )}
+      </div>
+      <div className="um-session-tail">
+        <span className="um-session-time">{time}</span>
+        <span className="um-session-joining"><strong>{joining}</strong> joining</span>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────
+   SCREEN 1 — HOMEPAGE
+───────────────────────────────────── */
+function HomeScreen() {
+  return (
+    <div className="um-screen">
+      <Nav />
+
+      {/* Hero with real image */}
+      <div className="um-hero">
+        <div className="um-hero-img" style={{ height: 300, position: 'relative', overflow: 'hidden' }}>
+          <img src="uploads/8370b6d97ee89c13247896b6b0583c65.jpg" alt="Runners at golden hour" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
+          <div className="um-hero-img-overlay"></div>
+        </div>
+        <div className="um-hero-content">
+          <div className="um-hero-eyebrow">Sri Lanka · May 2026</div>
+          <div className="um-hero-title">
+            Find your next<br/>
+            <em>ride or run.</em>
+          </div>
+          <div className="um-hero-sub">
+            Rides, runs, coffee sessions, training groups and endurance events across the island.
+          </div>
+          <div className="um-hero-btns">
+            <button className="um-hero-btn-primary">Explore sessions</button>
+            <button className="um-hero-btn-secondary">Submit one</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats strip */}
+      <div className="um-stats-strip">
+        <div className="um-stat">
+          <span className="um-stat-num">24</span>
+          <span className="um-stat-lbl">This week</span>
+        </div>
+        <div className="um-stat">
+          <span className="um-stat-num">8</span>
+          <span className="um-stat-lbl">Weekend</span>
+        </div>
+        <div className="um-stat">
+          <span className="um-stat-num">6</span>
+          <span className="um-stat-lbl">Clubs</span>
+        </div>
+        <div className="um-stat">
+          <span className="um-stat-num">3</span>
+          <span className="um-stat-lbl">Cities</span>
+        </div>
+      </div>
+
+      {/* This weekend */}
+      <div className="um-divider-label">
+        <span className="um-divider-label-text">This weekend</span>
+        <span className="um-divider-line"></span>
+        <span style={{ fontSize: 10, color: 'var(--um-accent)', fontWeight: 500, whiteSpace: 'nowrap' }}>Sat–Sun 3–4 May</span>
+      </div>
+
+      <SessionRow title="Colombo Coffee Loop" type="Ride" day="3" dow="Sat" time="6:00" location="Colombo 7" km="42" pace="25–28 km/h" difficulty="Social" joining="12" tags={[{ type: 'nodrop', label: 'No drop' }, { type: 'coffee', label: 'Coffee stop' }]} />
+      <SessionRow title="Negombo Beach Run" type="Run" day="3" dow="Sat" time="6:30" location="Negombo" km="10" pace="6:00/km" difficulty="Social" joining="18" tags={[{ type: 'beginner', label: 'Beginner OK' }]} />
+      <SessionRow title="Galle Face Sunrise Roll" type="Ride" day="4" dow="Sun" time="5:45" location="Fort, Colombo" km="28" pace="22–25 km/h" difficulty="Social" joining="7" tags={[{ type: 'coffee', label: 'Coffee stop' }, { type: 'tourist', label: 'Tourist OK' }]} />
+      <SessionRow title="Kandy Hills Interval" type="Run" day="4" dow="Sun" time="5:30" location="Kandy" km="12" pace="5:00/km" difficulty="Hard" joining="9" tags={[{ type: 'hard', label: 'Hard' }]} />
+
+      {/* Upcoming events */}
+      <div className="um-section-label" style={{ marginBottom: 12 }}>
+        <span className="um-section-title">Upcoming events</span>
+        <span className="um-section-link">View calendar</span>
+      </div>
+
+      <div className="um-event-row">
+        <div className="um-event-date"><span className="um-event-d">17</span><span className="um-event-m">May</span></div>
+        <div style={{ width: 1, background: 'var(--um-border-lt)', flexShrink: 0 }}></div>
+        <div className="um-event-body">
+          <div className="um-event-title">Colombo Tri Series</div>
+          <div className="um-event-meta">Beira Lake · Triathlon · 750m swim / 20 km bike / 5 km run</div>
+          <div style={{ marginTop: 6 }}><Badge type="tri">Triathlon</Badge></div>
+        </div>
+      </div>
+      <div className="um-event-row">
+        <div className="um-event-date"><span className="um-event-d">1</span><span className="um-event-m">Jun</span></div>
+        <div style={{ width: 1, background: 'var(--um-border-lt)', flexShrink: 0 }}></div>
+        <div className="um-event-body">
+          <div className="um-event-title">Kandy Mountain Challenge</div>
+          <div className="um-event-meta">Kandy · Road Ride · 120 km · Gran Fondo format</div>
+          <div style={{ marginTop: 6 }}><Badge type="ride">Endurance ride</Badge></div>
+        </div>
+      </div>
+
+      {/* Clubs */}
+      <div className="um-section-label" style={{ margin: '20px 0 0' }}>
+        <span className="um-section-title">Active clubs</span>
+        <span className="um-section-link">See all</span>
+      </div>
+      <div className="um-club-row">
+        <div className="um-club-mark">CC</div>
+        <div>
+          <div className="um-club-name">Colombo Cycling Club</div>
+          <div className="um-club-meta">Colombo · 140 members · 3× weekly</div>
+        </div>
+        <Badge type="ride" style={{ marginLeft: 'auto' }}>Ride</Badge>
+      </div>
+      <div className="um-club-row">
+        <div className="um-club-mark" style={{ background: 'oklch(36% 0.09 220)' }}>SR</div>
+        <div>
+          <div className="um-club-name">Sri Lanka Runners</div>
+          <div className="um-club-meta">Island-wide · 220 members · 5× weekly</div>
+        </div>
+        <Badge type="run">Run</Badge>
+      </div>
+
+      {/* Submit CTA */}
+      <div style={{ margin: '20px 22px 36px', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--um-border)' }}>
+        <div style={{ height: 140, position: 'relative', overflow: 'hidden' }}>
+          <img src="uploads/49fab97914717dd5757d45ba98e97a2c.jpg" alt="Community group" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'oklch(11% 0.008 250 / 0.45)' }}></div>
+        </div>
+        <div style={{ padding: '18px 20px 20px', background: 'var(--um-surface)' }}>
+          <div className="um-submit-cta-title">Organising a session?</div>
+          <div className="um-submit-cta-sub">Share it with the community — free, and done in under two minutes.</div>
+          <button className="um-btn um-btn-primary um-btn-full">Submit a ride or run</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────
+   SCREEN 2 — EXPLORE SESSIONS
+───────────────────────────────────── */
+function ExploreScreen() {
+  const [active, setActive] = useState('All');
+  const filters = ['All', 'Ride', 'Run', 'This weekend', 'Coffee stop', 'No drop', 'Beginner'];
+  return (
+    <div className="um-screen">
+      <Nav />
+
+      {/* Search */}
+      <div style={{ padding: '14px 22px 0' }}>
+        <div style={{ position: 'relative' }}>
+          <input
+            className="um-input"
+            placeholder="Search sessions, locations, clubs"
+            style={{ paddingLeft: 36, fontSize: 13 }}
+            readOnly
+          />
+          <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', opacity: 0.35 }} width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.4"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+        </div>
+      </div>
+
+      {/* Chips */}
+      <div className="um-chips">
+        {filters.map(f => (
+          <div key={f} className={`um-chip ${active === f ? 'active' : ''}`} onClick={() => setActive(f)}>{f}</div>
+        ))}
+      </div>
+
+      {/* Result count + sort */}
+      <div style={{ padding: '12px 22px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 11, color: 'var(--um-text-4)' }}>24 sessions</span>
+        <button style={{ fontSize: 11, color: 'var(--um-text-3)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 400 }}>Sort by date</button>
+      </div>
+
+      {/* Date group */}
+      <div className="um-divider-label">
+        <span className="um-divider-label-text">Saturday 3 May</span>
+        <span className="um-divider-line"></span>
+        <span style={{ fontSize: 10, color: 'var(--um-accent)', fontWeight: 500, whiteSpace: 'nowrap' }}>this weekend</span>
+      </div>
+
+      <SessionRow title="Colombo Coffee Loop" type="Ride" day="3" dow="Sat" time="6:00" location="Colombo 7" km="42" pace="25–28 km/h" difficulty="Social" joining="12" tags={[{ type: 'nodrop', label: 'No drop' }, { type: 'coffee', label: 'Coffee stop' }]} />
+      <SessionRow title="Negombo Beach Run" type="Run" day="3" dow="Sat" time="6:30" location="Negombo" km="10" pace="6:00/km" difficulty="Social" joining="18" tags={[{ type: 'beginner', label: 'Beginner OK' }, { type: 'tourist', label: 'Tourist OK' }]} />
+      <SessionRow title="Kandy Hills Interval" type="Run" day="3" dow="Sat" time="5:30" location="Kandy" km="12" pace="5:00/km" difficulty="Hard" joining="9" tags={[{ type: 'hard', label: 'Hard' }]} />
+
+      <div className="um-divider-label">
+        <span className="um-divider-label-text">Sunday 4 May</span>
+        <span className="um-divider-line"></span>
+      </div>
+
+      <SessionRow title="Galle Face Sunrise Roll" type="Ride" day="4" dow="Sun" time="5:45" location="Fort, Colombo" km="28" pace="22–25 km/h" difficulty="Social" joining="7" tags={[{ type: 'coffee', label: 'Coffee stop' }]} />
+      <SessionRow title="Peradeniya Loop" type="Ride" day="4" dow="Sun" time="6:00" location="Kandy" km="55" pace="28–32 km/h" difficulty="Moderate" joining="5" tags={[{ type: 'ride', label: 'Ride' }]} />
+
+      {/* Load more */}
+      <div style={{ padding: '16px 22px 32px' }}>
+        <button className="um-btn um-btn-outline um-btn-full">Load more</button>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────
+   SCREEN 3 — ACTIVITY DETAIL
+───────────────────────────────────── */
+function DetailScreen() {
+  return (
+    <div className="um-screen">
+      <Nav back title="Sessions" />
+
+      {/* Hero with image */}
+      <div className="um-detail-hero">
+        <div className="um-detail-hero-img" style={{ height: 220, position: 'relative', overflow: 'hidden' }}>
+          <img src="uploads/8b5b13d59c2c3457b490a7aceaa16a71.jpg" alt="Cyclists overlooking city" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%' }} />
+          <div className="um-detail-hero-overlay"></div>
+        </div>
+        <div className="um-detail-hero-content">
+          <div style={{ display: 'flex', gap: 5, marginBottom: 6 }}>
+            <Badge type="ride">Ride</Badge>
+            <Badge type="social">Social</Badge>
+            <Badge type="coffee">Coffee stop</Badge>
+          </div>
+          <div className="um-detail-title">Colombo Coffee Loop</div>
+          <div className="um-detail-meta">Sat 3 May · 6:00 AM · Independence Square, Colombo 7</div>
+        </div>
+      </div>
+
+      {/* Quick stats */}
+      <div className="um-quick-stat-row">
+        <div className="um-qs">
+          <span className="um-qs-num">42 <span className="um-qs-unit">km</span></span>
+          <span className="um-qs-lbl">Distance</span>
+        </div>
+        <div className="um-qs">
+          <span className="um-qs-num">25–28</span>
+          <span className="um-qs-lbl">km/h avg</span>
+        </div>
+        <div className="um-qs">
+          <span className="um-qs-num">~2 <span className="um-qs-unit">hr</span></span>
+          <span className="um-qs-lbl">Duration</span>
+        </div>
+        <div className="um-qs">
+          <span className="um-qs-num">12</span>
+          <span className="um-qs-lbl">Joining</span>
+        </div>
+      </div>
+
+      {/* Route section */}
+      <div className="um-section">
+        <div className="um-section-hd">Route</div>
+        <div style={{ height: 130, borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
+          <img src="uploads/b2df6b431f8adf438c1c8e7d62d58f7c.jpg" alt="Coffee stop" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'oklch(11% 0.008 250 / 0.18)', borderRadius: 6 }}></div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+          {[
+            { label: 'Start', val: 'Independence Square' },
+            { label: 'End', val: 'Barista Café, Bambalapitiya' },
+          ].map(p => (
+            <div key={p.label} style={{ background: 'var(--um-bg2)', borderRadius: 5, padding: '8px 10px' }}>
+              <div style={{ fontSize: 9, color: 'var(--um-text-4)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 500, marginBottom: 3 }}>{p.label}</div>
+              <div style={{ fontSize: 12, color: 'var(--um-text)', fontWeight: 400 }}>{p.val}</div>
+            </div>
+          ))}
+        </div>
+        <button style={{ marginTop: 10, fontSize: 11, color: 'var(--um-accent)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3, padding: 0 }}>Open in Strava</button>
+      </div>
+
+      {/* Suitability */}
+      <div className="um-section">
+        <div className="um-section-hd">Suitability</div>
+        <div className="um-suit-grid">
+          <Badge type="nodrop">No drop</Badge>
+          <Badge type="beginner">Beginner OK</Badge>
+          <Badge type="tourist">Tourist friendly</Badge>
+          <Badge type="coffee">Coffee stop</Badge>
+          <Badge type="tag">Helmet recommended</Badge>
+        </div>
+        <div style={{ marginTop: 12, fontSize: 13, color: 'var(--um-text-2)', lineHeight: 1.65, fontWeight: 400 }}>
+          A social-paced ride — no one gets left behind. Comfortable for riders at 25–28 km/h on flat coastal roads.
+        </div>
+      </div>
+
+      {/* Organiser */}
+      <div className="um-section">
+        <div className="um-section-hd">Organiser</div>
+        <div className="um-org-row">
+          <div className="um-org-mark">CC</div>
+          <div>
+            <div className="um-org-name">Colombo Cycling Club</div>
+            <div className="um-org-sub">Active since 2019 · 140 members</div>
+            <div className="um-org-btns">
+              <button className="um-btn um-btn-ghost um-btn-sm">WhatsApp</button>
+              <button className="um-btn um-btn-outline um-btn-sm">Strava</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Safety */}
+      <div className="um-section" style={{ borderBottom: 'none' }}>
+        <div className="um-section-hd">Safety</div>
+        <div className="um-notes">
+          {[
+            'Ride together at all times',
+            'Helmet strongly recommended',
+            'Bring water — no stops for first 20 km',
+            'WhatsApp group link shared on confirmation',
+          ].map(n => (
+            <div key={n} className="um-note">
+              <span className="um-note-dash">—</span>
+              <span>{n}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sticky CTA */}
+      <div className="um-cta-strip">
+        <button className="um-btn um-btn-primary" style={{ flex: 2 }}>I'm interested</button>
+        <button className="um-btn um-btn-outline" style={{ flex: 1 }}>WhatsApp</button>
+        <button className="um-btn um-btn-ghost" style={{ padding: '12px 14px' }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v9M3 6l4-4 4 4M2 13h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────
+   SCREEN 4 — SUBMIT FORM
+───────────────────────────────────── */
+function SubmitScreen() {
+  const [step, setStep] = useState(1);
+  const [coffee, setCoffee] = useState(true);
+  const [nodrop, setNodrop] = useState(true);
+  const [beginner, setBeginner] = useState(false);
+  const [tourist, setTourist] = useState(false);
+
+  return (
+    <div className="um-screen">
+      <div className="um-nav">
+        <div className="um-nav-back">
+          <span style={{ fontSize: 18, lineHeight: 1 }}>←</span>
+          <span>Submit a session</span>
+        </div>
+        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--um-text-3)' }}>✕</button>
+      </div>
+
+      {/* Stepper */}
+      <div className="um-stepper">
+        <div className={`um-step-seg ${step >= 1 ? 'active' : ''}`}></div>
+        <div className={`um-step-seg ${step >= 2 ? 'active' : ''}`}></div>
+        <div className={`um-step-seg ${step >= 3 ? 'active' : ''}`}></div>
+      </div>
+      <div className="um-step-label">
+        <strong>Step {step} of 3</strong> — {step === 1 ? 'Core details' : step === 2 ? 'Session details' : 'Organiser & visibility'}
+      </div>
+
+      {step === 1 && (
+        <div className="um-form-body">
+          <div className="um-field">
+            <label className="um-field-label">Session title</label>
+            <input className="um-input" placeholder="e.g. Colombo Coffee Loop" />
+          </div>
+          <div className="um-field">
+            <label className="um-field-label">Activity type</label>
+            <div className="um-type-grid">
+              <div className="um-type-btn sel">Ride</div>
+              <div className="um-type-btn">Run</div>
+              <div className="um-type-btn">Triathlon</div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="um-field">
+              <label className="um-field-label">Date</label>
+              <input className="um-input" type="date" defaultValue="2026-05-03" />
+            </div>
+            <div className="um-field">
+              <label className="um-field-label">Start time</label>
+              <input className="um-input" type="time" defaultValue="06:00" />
+            </div>
+          </div>
+          <div className="um-field">
+            <label className="um-field-label">City / area</label>
+            <select className="um-select">
+              <option>Colombo</option>
+              <option>Kandy</option>
+              <option>Galle</option>
+              <option>Negombo</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div className="um-field">
+            <label className="um-field-label">Start location</label>
+            <input className="um-input" placeholder="e.g. Independence Square, Colombo 7" />
+          </div>
+          <div className="um-field">
+            <label className="um-field-label">Difficulty</label>
+            <div className="um-diff-grid">
+              {['Easy', 'Social', 'Moderate', 'Hard'].map((d, i) => (
+                <div key={d} className={`um-diff-btn ${i === 1 ? 'sel' : ''}`}>{d}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="um-form-body">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="um-field">
+              <label className="um-field-label">Distance (km)</label>
+              <input className="um-input" placeholder="42" />
+            </div>
+            <div className="um-field">
+              <label className="um-field-label">Duration</label>
+              <input className="um-input" placeholder="e.g. 2 hr" />
+            </div>
+          </div>
+          <div className="um-field">
+            <label className="um-field-label">Pace or average speed</label>
+            <input className="um-input" placeholder="e.g. 25–28 km/h or 5:30/km" />
+          </div>
+          <div className="um-field">
+            <label className="um-field-label">Route link</label>
+            <input className="um-input" placeholder="Strava, Komoot, or Google Maps (optional)" />
+          </div>
+          <div style={{ borderTop: '1px solid var(--um-border-lt)', paddingTop: 6 }}>
+            <div className="um-field-label" style={{ marginBottom: 4 }}>Session tags</div>
+            <p style={{ fontSize: 12, color: 'var(--um-text-4)', marginBottom: 14 }}>Helps riders find and assess your session.</p>
+            {[
+              { label: 'Coffee stop', sub: 'Ends at a café', val: coffee, set: setCoffee },
+              { label: 'No drop', sub: 'No one gets left behind', val: nodrop, set: setNodrop },
+              { label: 'Beginner friendly', sub: null, val: beginner, set: setBeginner },
+              { label: 'Tourist friendly', sub: 'Open to visitors', val: tourist, set: setTourist },
+            ].map(t => (
+              <div key={t.label} className="um-toggle-row">
+                <div>
+                  <div className="um-toggle-name">{t.label}</div>
+                  {t.sub && <div className="um-toggle-desc">{t.sub}</div>}
+                </div>
+                <button className={`um-toggle ${t.val ? 'on' : 'off'}`} onClick={() => t.set(v => !v)}></button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="um-form-body">
+          <div className="um-field">
+            <label className="um-field-label">Organiser name or club</label>
+            <input className="um-input" placeholder="e.g. Colombo Cycling Club" />
+          </div>
+          <div className="um-field">
+            <label className="um-field-label">WhatsApp contact</label>
+            <input className="um-input" placeholder="+94 77 000 0000" />
+          </div>
+          <div className="um-field">
+            <label className="um-field-label">Strava club link</label>
+            <input className="um-input" placeholder="strava.com/clubs/… (optional)" />
+          </div>
+          <div style={{ borderTop: '1px solid var(--um-border-lt)', paddingTop: 6 }}>
+            <div className="um-field-label" style={{ marginBottom: 12 }}>Activity visibility</div>
+            <div className="um-radio-col">
+              {[
+                { val: 'public', label: 'Public', sub: 'Visible to everyone on Unknown Movement' },
+                { val: 'unlisted', label: 'Unlisted', sub: 'Only via direct link' },
+                { val: 'private', label: 'Private', sub: 'Invite only' },
+              ].map((opt, i) => (
+                <div key={opt.val} className="um-radio-row">
+                  <div className={`um-radio-dot ${i === 0 ? 'sel' : ''}`}></div>
+                  <div>
+                    <div className="um-radio-label">{opt.label}</div>
+                    <div className="um-radio-sub">{opt.sub}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="um-field">
+            <label className="um-field-label">Attendee visibility</label>
+            <select className="um-select">
+              <option>Show count only (recommended)</option>
+              <option>Show names</option>
+              <option>Hide attendee info</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Form nav */}
+      <div className="um-form-nav">
+        {step > 1 && (
+          <button className="um-btn um-btn-outline" style={{ flex: 1 }} onClick={() => setStep(s => s - 1)}>Back</button>
+        )}
+        {step < 3 ? (
+          <button className="um-btn um-btn-primary" style={{ flex: 2 }} onClick={() => setStep(s => s + 1)}>Continue</button>
+        ) : (
+          <button className="um-btn um-btn-primary" style={{ flex: 2 }}>Submit session</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────
+   MAIN APP
+───────────────────────────────────── */
+function App() {
+  return (
+    <DesignCanvas title="Unknown Movement" subtitle="Refined MVP · Ultra-minimal premium · Mobile-first · May 2026">
+      <DCSection id="mvp" title="MVP Screens — Unknown Movement">
+        <DCArtboard id="home"    label="01 Homepage"         width={390} height={900}>
+          <HomeScreen />
+        </DCArtboard>
+        <DCArtboard id="explore" label="02 Explore Sessions" width={390} height={900}>
+          <ExploreScreen />
+        </DCArtboard>
+        <DCArtboard id="detail"  label="03 Activity Detail"  width={390} height={900}>
+          <DetailScreen />
+        </DCArtboard>
+        <DCArtboard id="submit"  label="04 Submit Activity"  width={390} height={900}>
+          <SubmitScreen />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
