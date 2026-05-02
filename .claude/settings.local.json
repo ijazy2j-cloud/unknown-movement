@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\User\\\\projects\\\\unknown-movement\" -Recurse -Force)",
+      "Bash(Select-Object FullName, Length)",
+      "Bash(Sort-Object FullName)",
+      "Bash(npx vite *)",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\User\\\\projects\\\\unknown-movement\\\\public\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\User\\\\projects\\\\unknown-movement\" -Filter \"*.jpg\" -ErrorAction SilentlyContinue)"
+    ]
+  }
+}
