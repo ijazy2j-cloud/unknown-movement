@@ -52,7 +52,13 @@ export default function Nav({ showBack, goBack, onNavigate, currentScreen, darkM
     setMenuOpen(false);
   };
 
-  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : '?';
+  // Google OAuth users have avatar_url and full_name in user_metadata
+  const avatarUrl = user?.user_metadata?.avatar_url || null;
+  const initials = (
+    user?.user_metadata?.full_name?.split(' ').map(w => w[0]).join('').slice(0, 2) ||
+    user?.email?.slice(0, 2) ||
+    '?'
+  ).toUpperCase();
 
   return (
     <>
@@ -103,8 +109,18 @@ export default function Nav({ showBack, goBack, onNavigate, currentScreen, darkM
                 className={`um-user-avatar${menuOpen ? ' open' : ''}`}
                 onClick={() => setMenuOpen(o => !o)}
                 aria-label="User menu"
+                style={{ padding: avatarUrl ? 0 : undefined, overflow: avatarUrl ? 'hidden' : undefined }}
               >
-                {initials}
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Profile"
+                    referrerPolicy="no-referrer"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }}
+                  />
+                ) : (
+                  initials
+                )}
               </button>
               {menuOpen && (
                 <div className="um-user-menu">

@@ -4,5 +4,12 @@ const url = import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = url && key && !url.includes('your-project-ref')
-  ? createClient(url, key)
+  ? createClient(url, key, {
+      auth: {
+        autoRefreshToken:  true,
+        persistSession:    true,
+        detectSessionInUrl: true,   // ensures PKCE code in URL is exchanged
+        storageKey:        'um-auth', // isolate from other Supabase apps on same domain
+      },
+    })
   : null;

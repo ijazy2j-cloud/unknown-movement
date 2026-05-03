@@ -75,17 +75,27 @@ export default function App() {
   // ── Supabase auth ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!supabase) return;
+
+    // getSession picks up any persisted session (e.g. returning user, magic link)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      // After OAuth redirect, clean up the URL (remove hash fragments)
-      if (session && window.location.hash.includes('access_token')) {
-        window.history.replaceState({}, '', screenToUrl('home', null));
-        setScreen('home');
+
+      // After a successful OAuth / magic-link sign-in, clean up the callback URL
+      // so ?code= or #access_token= are not left in the address bar.
+      if (event === 'SIGNED_IN') {
+        const isOAuthCallback =
+          window.location.search.includes('code=') ||
+          window.location.hash.includes('access_token');
+        if (isOAuthCallback) {
+          window.history.replaceState({}, '', '/');
+        }
       }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -123,6 +133,16 @@ export default function App() {
 
   // ── URL sync ──────────────────────────────────────────────────────────────
   useEffect(() => {
+    // Never overwrite the URL while an OAuth callback is in progress.
+    // Supabase reads ?code= / #access_token= asynchronously; stripping them
+    // before that exchange completes prevents the session from being created.
+    const isOAuthCallback =
+      window.location.search.includes('code=') ||
+      window.location.hash.includes('access_token');
+    if (isOAuthCallback) {
+      setPageTitle(screen, selectedEventId); // still update the tab title
+      return;
+    }
     const url = screenToUrl(screen, selectedEventId);
     window.history.replaceState({ screen, selectedEventId }, '', url);
     setPageTitle(screen, selectedEventId);
