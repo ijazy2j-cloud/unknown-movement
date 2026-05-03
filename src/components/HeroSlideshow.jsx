@@ -53,7 +53,11 @@ export default function HeroSlideshow({ onNavigate }) {
       <div className="um-hero-vignette" />
 
       <div className="um-hero-content">
-        <div className="um-hero-eyebrow">Sri Lanka · May 2026</div>
+        <div className="um-hero-eyebrow">
+          <span className="um-hero-eyebrow-line" aria-hidden="true" />
+          Sri Lanka · May 2026
+          <span className="um-hero-eyebrow-line" aria-hidden="true" />
+        </div>
         <h1 className="um-hero-title">
           Find your<br />next<br /><em>ride or run.</em>
         </h1>

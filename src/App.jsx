@@ -8,10 +8,48 @@ import MyEventsScreen from './screens/MyEventsScreen';
 import AttendeesScreen from './screens/AttendeesScreen';
 import AuthModal from './components/AuthModal';
 
+// ── URL ↔ screen mapping ─────────────────────────────────────────────────────
+function urlToScreen(pathname) {
+  if (pathname === '/' || pathname === '') return { screen: 'home', eventId: null };
+  if (pathname === '/explore')   return { screen: 'explore',  eventId: null };
+  if (pathname === '/submit')    return { screen: 'submit',   eventId: null };
+  if (pathname === '/my-events') return { screen: 'myevents', eventId: null };
+  const m = pathname.match(/^\/event\/(.+)$/);
+  if (m) return { screen: 'detail', eventId: decodeURIComponent(m[1]) };
+  return { screen: 'home', eventId: null };
+}
+
+function screenToUrl(screen, selectedEventId) {
+  if (screen === 'home')      return '/';
+  if (screen === 'explore')   return '/explore';
+  if (screen === 'submit')    return '/submit';
+  if (screen === 'myevents')  return '/my-events';
+  if (screen === 'detail' && selectedEventId) return `/event/${encodeURIComponent(selectedEventId)}`;
+  return '/';
+}
+
+// ── Dynamic page title ────────────────────────────────────────────────────────
+function setPageTitle(screen, selectedEventId) {
+  const base = 'Unknown Movement';
+  const titles = {
+    home:      `${base} | Group Rides, Runs & Cycling Events in Sri Lanka`,
+    explore:   `Explore Sessions | ${base}`,
+    submit:    `Submit a Session | ${base}`,
+    myevents:  `My Events | ${base}`,
+    attendees: `Attendees | ${base}`,
+  };
+  document.title = titles[screen] || titles.home;
+}
+
 export default function App() {
-  const [screen, setScreen] = useState('home');
+  // ── Initialise from URL ───────────────────────────────────────────────────
+  const initial = urlToScreen(window.location.pathname);
+
+  const [screen, setScreen] = useState(initial.screen);
   const [navHistory, setNavHistory] = useState([]);
-  const [selectedEventId, setSelectedEventId] = useState('colombo-coffee-loop');
+  const [selectedEventId, setSelectedEventId] = useState(
+    initial.eventId || 'colombo-coffee-loop'
+  );
   const [attendeesEventId, setAttendeesEventId] = useState(null);
   const [editEventId, setEditEventId] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -34,6 +72,7 @@ export default function App() {
 
   const [enrolments, setEnrolments] = useState([]);
 
+  // ── Supabase auth ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -41,6 +80,11 @@ export default function App() {
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      // After OAuth redirect, clean up the URL (remove hash fragments)
+      if (session && window.location.hash.includes('access_token')) {
+        window.history.replaceState({}, '', screenToUrl('home', null));
+        setScreen('home');
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -63,6 +107,7 @@ export default function App() {
     } catch {}
   }
 
+  // ── Theme persistence ──────────────────────────────────────────────────────
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
     localStorage.setItem('um-theme', darkMode ? 'dark' : 'light');
@@ -76,8 +121,16 @@ export default function App() {
     if (!user) localStorage.setItem('um-following', JSON.stringify(followedClubs));
   }, [followedClubs, user]);
 
+  // ── URL sync ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const url = screenToUrl(screen, selectedEventId);
+    window.history.replaceState({ screen, selectedEventId }, '', url);
+    setPageTitle(screen, selectedEventId);
+  }, [screen, selectedEventId]);
+
+  // ── Navigation ────────────────────────────────────────────────────────────
   const navigate = (to, eventId = null) => {
-    if (to === screen) return;
+    if (to === screen && !eventId) return;
     setNavHistory(h => [...h, screen]);
     setScreen(to);
     if (eventId) setSelectedEventId(eventId);

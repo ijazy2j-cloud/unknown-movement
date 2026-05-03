@@ -2,12 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import Badge from '../components/Badge';
 import { supabase } from '../lib/supabase';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GOOGLE MAPS API KEY — paste your key between the quotes below
 const GOOGLE_MAPS_API_KEY = 'YOUR_API_KEY_HERE';
-// ─────────────────────────────────────────────────────────────────────────────
-
-const TODAY = '2026-05-02';
+const TODAY = new Date().toISOString().slice(0, 10);
 
 function SunIcon() {
   return (
@@ -33,11 +29,30 @@ function MoonIcon() {
   );
 }
 
+function VerifiedIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+      <polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+  );
+}
+
 export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMode, onToggleDark, user, editEventId, onClearEdit }) {
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  // Official event toggle
+  const [isOfficialEvent, setIsOfficialEvent] = useState(false);
+  const [flyerImageUrl, setFlyerImageUrl] = useState('');
+  const [flyerUploading, setFlyerUploading] = useState(false);
+  const [registrationLink, setRegistrationLink] = useState('');
+  const [registrationDeadline, setRegistrationDeadline] = useState('');
+  const [entryFee, setEntryFee] = useState('');
+  const [eventWebsite, setEventWebsite] = useState('');
+  const flyerInputRef = useRef(null);
 
   // Step 1
   const [title, setTitle] = useState('');
@@ -74,6 +89,12 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
     supabase.from('events').select('*').eq('id', editEventId).single()
       .then(({ data }) => {
         if (!data) return;
+        setIsOfficialEvent(!!data.is_official_event);
+        setFlyerImageUrl(data.flyer_image_url || '');
+        setRegistrationLink(data.registration_link || '');
+        setRegistrationDeadline(data.registration_deadline || '');
+        setEntryFee(data.entry_fee || '');
+        setEventWebsite(data.event_website || '');
         setTitle(data.title || '');
         setActivityType(data.type === 'ride' ? 'Ride' : data.type === 'run' ? 'Run' : 'Triathlon');
         setDate(data.date || TODAY);
@@ -127,10 +148,26 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
     }
   }, [step]);
 
+  const handleFlyerUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase || !user) return;
+    e.target.value = '';
+    setFlyerUploading(true);
+    const ext = file.name.split('.').pop();
+    const path = `flyers/${user.id}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('event-photos').upload(path, file, { contentType: file.type });
+    if (error) { setSubmitError('Flyer upload failed: ' + error.message); setFlyerUploading(false); return; }
+    const { data: { publicUrl } } = supabase.storage.from('event-photos').getPublicUrl(path);
+    setFlyerImageUrl(publicUrl);
+    setFlyerUploading(false);
+  };
+
   function validate() {
-    if (!title.trim()) return 'Please enter a session title.';
+    if (!title.trim()) return 'Please enter a title.';
     if (date < TODAY) return 'Date must be today or in the future.';
     if (!startLocation.trim()) return 'Please enter a start location.';
+    if (isOfficialEvent && registrationLink && !/^https?:\/\/.+/.test(registrationLink))
+      return 'Registration link must be a valid URL (https://…).';
     return null;
   }
 
@@ -148,7 +185,6 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
   async function handleSubmit() {
     const err = validate();
     if (err) { setSubmitError(err); return; }
-
     if (!supabase || !user) { setSubmitted(true); return; }
 
     setSubmitting(true);
@@ -162,10 +198,10 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
     }
 
     const tags = [
-      coffee  && { type: 'coffee',   label: 'Coffee stop' },
-      nodrop  && { type: 'nodrop',   label: 'No drop' },
+      coffee   && { type: 'coffee',   label: 'Coffee stop' },
+      nodrop   && { type: 'nodrop',   label: 'No drop' },
       beginner && { type: 'beginner', label: 'Beginner friendly' },
-      tourist && { type: 'tourist',  label: 'Tourist friendly' },
+      tourist  && { type: 'tourist',  label: 'Tourist friendly' },
     ].filter(Boolean);
 
     const payload = {
@@ -178,9 +214,9 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
       start_location_lat:  startCoords?.lat || null,
       start_location_lng:  startCoords?.lng || null,
       distance_km:         distance ? parseFloat(distance) : null,
-      pace:                pace.trim() || null,
+      pace:                isOfficialEvent ? null : (pace.trim() || null),
       strava_link:         routeLink.trim() || null,
-      difficulty:          difficulty.toLowerCase(),
+      difficulty:          isOfficialEvent ? null : difficulty.toLowerCase(),
       tags,
       organiser_id:        user.id,
       organiser_name:      organiserName.trim() || user.email,
@@ -188,6 +224,13 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
       visibility,
       attendee_visibility: attendeeVis,
       status:              'upcoming',
+      // Official event fields
+      is_official_event:    isOfficialEvent,
+      flyer_image_url:      flyerImageUrl || null,
+      registration_link:    registrationLink.trim() || null,
+      registration_deadline:registrationDeadline || null,
+      entry_fee:            entryFee.trim() || null,
+      event_website:        eventWebsite.trim() || null,
     };
 
     let error;
@@ -204,9 +247,10 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
   }
 
   function handleSubmitAnother() {
-    setStep(1); setTitle(''); setActivityType('Ride');
-    setDate(TODAY); setStartTime('06:00'); setCity('Colombo');
-    setStartLocation(''); setStartCoords(null); setDifficulty('Social');
+    setStep(1); setIsOfficialEvent(false); setFlyerImageUrl('');
+    setRegistrationLink(''); setRegistrationDeadline(''); setEntryFee(''); setEventWebsite('');
+    setTitle(''); setActivityType('Ride'); setDate(TODAY); setStartTime('06:00');
+    setCity('Colombo'); setStartLocation(''); setStartCoords(null); setDifficulty('Social');
     setDistance(''); setPace(''); setRouteLink('');
     setCoffee(true); setNodrop(true); setBeginner(false); setTourist(false);
     setOrganiserName(''); setWhatsapp(''); setStravaLink('');
@@ -219,7 +263,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
   const typeKey = activityType === 'Ride' ? 'ride' : activityType === 'Run' ? 'run' : 'tri';
 
   if (submitted) {
-    const tags = [coffee && 'Coffee stop', nodrop && 'No drop', beginner && 'Beginner friendly', tourist && 'Tourist friendly'].filter(Boolean);
+    const tagList = [coffee && 'Coffee stop', nodrop && 'No drop', beginner && 'Beginner friendly', tourist && 'Tourist friendly'].filter(Boolean);
     return (
       <div className="um-screen">
         <div className="um-nav">
@@ -239,24 +283,41 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
             </svg>
           </div>
           <div>
-            <div className="um-confirm-title">{editEventId ? 'Session updated' : 'Session submitted'}</div>
-            <div className="um-confirm-sub">Your session is live. Riders can now find and join it.</div>
+            <div className="um-confirm-title">{editEventId ? 'Session updated' : isOfficialEvent ? 'Event submitted' : 'Session submitted'}</div>
+            <div className="um-confirm-sub">
+              {isOfficialEvent
+                ? 'Your event is live. Athletes can now find and register.'
+                : 'Your session is live. Riders can now find and join it.'}
+            </div>
           </div>
           <div className="um-confirm-card">
-            <div className="um-confirm-card-hd">Session details</div>
-            <div className="um-confirm-card-title">{title || 'Untitled session'}</div>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div className="um-confirm-card-hd">
+              {isOfficialEvent ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <VerifiedIcon /> Official event
+                </span>
+              ) : 'Session details'}
+            </div>
+            <div className="um-confirm-card-title">{title || 'Untitled'}</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <Badge type={typeKey}>{activityType}</Badge>
+              {isOfficialEvent && (
+                <span style={{ fontSize: 10, fontWeight: 600, color: 'oklch(68% 0.14 148)', background: 'oklch(68% 0.14 148 / 0.15)', padding: '2px 8px', borderRadius: 4, letterSpacing: '0.04em' }}>OFFICIAL</span>
+              )}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px solid var(--um-border-lt)', paddingTop: 14 }}>
               {[
                 { key: 'Date', val: date },
                 { key: 'Time', val: startTime },
                 { key: 'City', val: city },
-                { key: 'Start location', val: startLocation || 'Not specified' },
-                { key: 'Difficulty', val: difficulty },
-                ...(tags.length ? [{ key: 'Tags', val: tags.join(', ') }] : []),
-                ...(startCoords ? [{ key: 'Coordinates', val: `${startCoords.lat.toFixed(5)}, ${startCoords.lng.toFixed(5)}` }] : []),
+                { key: 'Location', val: startLocation || 'Not specified' },
+                ...(isOfficialEvent ? [
+                  ...(entryFee ? [{ key: 'Entry fee', val: entryFee }] : []),
+                  ...(registrationDeadline ? [{ key: 'Reg. deadline', val: registrationDeadline }] : []),
+                ] : [
+                  { key: 'Difficulty', val: difficulty },
+                  ...(tagList.length ? [{ key: 'Tags', val: tagList.join(', ') }] : []),
+                ]),
               ].map(row => (
                 <div key={row.key} className="um-confirm-row">
                   <span className="um-confirm-key">{row.key}</span>
@@ -268,7 +329,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
           <div className="um-confirm-btns">
             <button className="um-btn um-btn-accent um-btn-full" onClick={() => onNavigate('home')}>Back to homepage</button>
             {!editEventId && (
-              <button className="um-btn um-btn-outline um-btn-full" onClick={handleSubmitAnother}>Submit another session</button>
+              <button className="um-btn um-btn-outline um-btn-full" onClick={handleSubmitAnother}>Submit another</button>
             )}
             {user && (
               <button className="um-btn um-btn-ghost um-btn-full" onClick={() => onNavigate('myevents')}>View My Events</button>
@@ -312,12 +373,107 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
         <strong>Step {step} of 3</strong> — {step === 1 ? 'Core details' : step === 2 ? 'Session details' : 'Organiser & visibility'}
       </div>
 
+      {/* ── Step 1 ─────────────────────────────────────────────────────────── */}
       {step === 1 && (
         <div className="um-form-body">
-          <div className="um-field">
-            <label className="um-field-label">Session title</label>
-            <input className="um-input" placeholder="e.g. Colombo Coffee Loop" value={title} onChange={e => setTitle(e.target.value)} />
+
+          {/* Official event toggle */}
+          <div style={{ background: isOfficialEvent ? 'var(--um-accent-lt)' : 'var(--um-bg2)', border: `1px solid ${isOfficialEvent ? 'oklch(42% 0.14 30 / 0.5)' : 'var(--um-border-lt)'}`, borderRadius: 10, padding: '14px 16px' }}>
+            <div className="um-toggle-row" style={{ padding: 0, border: 'none', minHeight: 'auto' }}>
+              <div>
+                <div className="um-toggle-name" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <VerifiedIcon />
+                  Official race or registered event?
+                </div>
+                <div className="um-toggle-desc" style={{ marginTop: 4 }}>
+                  Enable for marathons, sportives, registered races with external sign-up.
+                </div>
+              </div>
+              <button
+                className={`um-toggle ${isOfficialEvent ? 'on' : 'off'}`}
+                onClick={() => setIsOfficialEvent(v => !v)}
+                aria-label="Toggle official event"
+              />
+            </div>
+
+            {isOfficialEvent && (
+              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 16, borderTop: '1px solid oklch(42% 0.14 30 / 0.3)' }}>
+                {/* Flyer upload */}
+                <div className="um-field">
+                  <label className="um-field-label">Event flyer image</label>
+                  {flyerImageUrl ? (
+                    <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', maxHeight: 180 }}>
+                      <img src={flyerImageUrl} alt="Event flyer" style={{ width: '100%', objectFit: 'cover', display: 'block' }} />
+                      <button
+                        onClick={() => setFlyerImageUrl('')}
+                        style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', border: 'none', color: 'white', borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 12 }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <input ref={flyerInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFlyerUpload} />
+                      <button
+                        className="um-btn um-btn-outline um-btn-full"
+                        onClick={() => { if (!user) { alert('Sign in to upload a flyer.'); return; } flyerInputRef.current?.click(); }}
+                        disabled={flyerUploading}
+                      >
+                        {flyerUploading ? 'Uploading…' : 'Upload flyer image'}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Registration link */}
+                <div className="um-field">
+                  <label className="um-field-label">Registration link <span style={{ color: 'var(--um-text-4)', fontWeight: 400 }}>(required for official events)</span></label>
+                  <input
+                    className="um-input"
+                    type="url"
+                    placeholder="https://register.example.com"
+                    value={registrationLink}
+                    onChange={e => setRegistrationLink(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="um-field">
+                    <label className="um-field-label">Reg. deadline</label>
+                    <input className="um-input" type="date" value={registrationDeadline} onChange={e => setRegistrationDeadline(e.target.value)} min={TODAY} />
+                  </div>
+                  <div className="um-field">
+                    <label className="um-field-label">Entry fee</label>
+                    <input className="um-input" placeholder="e.g. LKR 2500 or Free" value={entryFee} onChange={e => setEntryFee(e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="um-field">
+                  <label className="um-field-label">Event website <span style={{ color: 'var(--um-text-4)', fontWeight: 400 }}>(optional)</span></label>
+                  <input
+                    className="um-input"
+                    type="url"
+                    placeholder="https://eventhome.com (optional)"
+                    value={eventWebsite}
+                    onChange={e => setEventWebsite(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
+
+          <div className="um-field">
+            <label className="um-field-label">
+              {isOfficialEvent ? 'Event name' : 'Session title'}
+            </label>
+            <input
+              className="um-input"
+              placeholder={isOfficialEvent ? 'e.g. Colombo Marathon 2026' : 'e.g. Colombo Coffee Loop'}
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+            />
+          </div>
+
           <div className="um-field">
             <label className="um-field-label">Activity type</label>
             <div className="um-type-grid">
@@ -326,6 +482,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
               ))}
             </div>
           </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div className="um-field">
               <label className="um-field-label">Date</label>
@@ -336,6 +493,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
               <input className="um-input" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
             </div>
           </div>
+
           <div className="um-field">
             <label className="um-field-label">City / area</label>
             <select className="um-select" value={city} onChange={e => setCity(e.target.value)}>
@@ -346,6 +504,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
               <option>Other</option>
             </select>
           </div>
+
           <div className="um-field">
             <label className="um-field-label">Start location</label>
             <input
@@ -365,17 +524,22 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
               </div>
             )}
           </div>
-          <div className="um-field">
-            <label className="um-field-label">Difficulty</label>
-            <div className="um-diff-grid">
-              {['Easy', 'Social', 'Moderate', 'Hard'].map(d => (
-                <button key={d} className={`um-diff-btn${difficulty === d ? ' sel' : ''}`} onClick={() => setDifficulty(d)}>{d}</button>
-              ))}
+
+          {/* Hide difficulty for official events */}
+          {!isOfficialEvent && (
+            <div className="um-field">
+              <label className="um-field-label">Difficulty</label>
+              <div className="um-diff-grid">
+                {['Easy', 'Social', 'Moderate', 'Hard'].map(d => (
+                  <button key={d} className={`um-diff-btn${difficulty === d ? ' sel' : ''}`} onClick={() => setDifficulty(d)}>{d}</button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
+      {/* ── Step 2 ─────────────────────────────────────────────────────────── */}
       {step === 2 && (
         <div className="um-form-body">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -383,23 +547,26 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
               <label className="um-field-label">Distance (km)</label>
               <input className="um-input" placeholder="42" value={distance} onChange={e => setDistance(e.target.value)} />
             </div>
-            <div className="um-field">
-              <label className="um-field-label">Pace or avg speed</label>
-              <input className="um-input" placeholder="5:30/km or 28 km/h" value={pace} onChange={e => setPace(e.target.value)} />
-            </div>
+            {/* Hide pace for official events */}
+            {!isOfficialEvent && (
+              <div className="um-field">
+                <label className="um-field-label">Pace or avg speed</label>
+                <input className="um-input" placeholder="5:30/km or 28 km/h" value={pace} onChange={e => setPace(e.target.value)} />
+              </div>
+            )}
           </div>
           <div className="um-field">
             <label className="um-field-label">Route link</label>
             <input className="um-input" placeholder="Strava, Komoot, or Google Maps (optional)" value={routeLink} onChange={e => setRouteLink(e.target.value)} />
           </div>
           <div style={{ borderTop: '1px solid var(--um-border-lt)', paddingTop: 6 }}>
-            <div className="um-field-label" style={{ marginBottom: 4 }}>Session tags</div>
-            <p style={{ fontSize: 12, color: 'var(--um-text-4)', marginBottom: 14 }}>Helps riders find and assess your session.</p>
+            <div className="um-field-label" style={{ marginBottom: 4 }}>Tags</div>
+            <p style={{ fontSize: 12, color: 'var(--um-text-4)', marginBottom: 14 }}>Helps athletes find and assess your {isOfficialEvent ? 'event' : 'session'}.</p>
             {[
-              { label: 'Coffee stop', sub: 'Ends at a café', val: coffee, set: setCoffee },
-              { label: 'No drop', sub: 'No one gets left behind', val: nodrop, set: setNodrop },
-              { label: 'Beginner friendly', sub: null, val: beginner, set: setBeginner },
-              { label: 'Tourist friendly', sub: 'Open to visitors', val: tourist, set: setTourist },
+              { label: 'Coffee stop',      sub: 'Ends at a café',          val: coffee,  set: setCoffee  },
+              { label: 'No drop',          sub: 'No one gets left behind', val: nodrop,  set: setNodrop  },
+              { label: 'Beginner friendly',sub: null,                       val: beginner,set: setBeginner},
+              { label: 'Tourist friendly', sub: 'Open to visitors',        val: tourist, set: setTourist },
             ].map(t => (
               <div key={t.label} className="um-toggle-row">
                 <div>
@@ -413,6 +580,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
         </div>
       )}
 
+      {/* ── Step 3 ─────────────────────────────────────────────────────────── */}
       {step === 3 && (
         <div className="um-form-body">
           <div className="um-field">
@@ -428,7 +596,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
             <input className="um-input" placeholder="strava.com/clubs/… (optional)" value={stravaLink} onChange={e => setStravaLink(e.target.value)} />
           </div>
           <div style={{ borderTop: '1px solid var(--um-border-lt)', paddingTop: 6 }}>
-            <div className="um-field-label" style={{ marginBottom: 14 }}>Activity visibility</div>
+            <div className="um-field-label" style={{ marginBottom: 14 }}>Visibility</div>
             <div className="um-radio-col">
               {[
                 { val: 'public',   label: 'Public',   sub: 'Visible to everyone on Unknown Movement' },
@@ -467,7 +635,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
             style={{ flex: 2 }}
             onClick={() => {
               if (step === 1) {
-                const err = !title.trim() ? 'Please enter a session title.' : date < TODAY ? 'Date must be in the future.' : null;
+                const err = !title.trim() ? 'Please enter a title.' : date < TODAY ? 'Date must be in the future.' : null;
                 if (err) { setSubmitError(err); return; }
                 setSubmitError('');
               }
@@ -483,7 +651,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
             onClick={handleSubmit}
             disabled={submitting}
           >
-            {submitting ? 'Submitting…' : editEventId ? 'Save changes' : 'Submit session'}
+            {submitting ? 'Submitting…' : editEventId ? 'Save changes' : isOfficialEvent ? 'Submit event' : 'Submit session'}
           </button>
         )}
       </div>

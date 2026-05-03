@@ -27,7 +27,6 @@ function formatCardDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
-
 function formatCardTime(timeStr) {
   if (!timeStr) return '';
   const [h, m] = timeStr.split(':').map(Number);
@@ -35,32 +34,179 @@ function formatCardTime(timeStr) {
 }
 
 const [WEEKEND_SAT, WEEKEND_SUN] = getWeekendDates();
-
 const weekLabel = (() => {
   const d1 = parseInt(WEEKEND_SAT.split('-')[2], 10);
   const d2 = parseInt(WEEKEND_SUN.split('-')[2], 10);
-  const mon = MONTHS[parseInt(WEEKEND_SAT.split('-')[1], 10) - 1];
-  return `Sat–Sun ${d1}–${d2} ${mon}`;
+  return `Sat–Sun ${d1}–${d2} ${MONTHS[parseInt(WEEKEND_SAT.split('-')[1], 10) - 1]}`;
 })();
 
 const STAT_TARGETS = { week: 24, weekend: 8, clubs: 6, cities: 3 };
 
+// ── FAQ data (also used for JSON-LD schema) ───────────────────────────────────
+const FAQS = [
+  {
+    q: 'What is Unknown Movement?',
+    a: 'Unknown Movement is a free platform for discovering and joining group rides, runs, and cycling events across Sri Lanka. Athletes and clubs post sessions, and anyone can browse and enrol.',
+  },
+  {
+    q: 'How do I join a group ride or run in Sri Lanka?',
+    a: 'Browse upcoming sessions on the Explore page, click on one you like, and tap Enrol. You\'ll receive the WhatsApp group link and meeting details directly.',
+  },
+  {
+    q: 'Are the sessions free to join?',
+    a: 'Community sessions submitted by clubs and individuals are free. Official registered races may have an entry fee listed on their event page.',
+  },
+  {
+    q: 'Can I submit my own ride or run?',
+    a: 'Yes! Tap "Submit a session" on the homepage. It takes under two minutes and your session will be live immediately for the community to discover.',
+  },
+  {
+    q: 'What cities does Unknown Movement cover?',
+    a: 'Sessions are available across Sri Lanka including Colombo, Kandy, Galle, Negombo, and beyond. Use the city filter on Explore to find sessions near you.',
+  },
+];
+
+// ── JSON-LD helpers ───────────────────────────────────────────────────────────
+function JsonLd({ data }) {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(data);
+    document.head.appendChild(script);
+    return () => { try { document.head.removeChild(script); } catch {} };
+  }, []);
+  return null;
+}
+
+const ORG_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Unknown Movement',
+  url: 'https://unknownmovement.netlify.app/',
+  logo: 'https://unknownmovement.netlify.app/favicon.svg',
+  description: 'Group rides, runs, and cycling events across Sri Lanka.',
+  areaServed: { '@type': 'Country', name: 'Sri Lanka' },
+  sameAs: [],
+};
+
+const FAQ_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQS.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
+// ── Official event card ───────────────────────────────────────────────────────
+function OfficialEventCard({ ev, onNavigate, i, revealed }) {
+  const imgSrc = ev.flyer_image_url || ev.image;
+  return (
+    <div
+      className={`um-featured-card${revealed ? ' revealed' : ''}`}
+      style={{ transitionDelay: revealed ? `${i * 0.1}s` : '0s', width: '72vw', maxWidth: 280, height: 300 }}
+      onClick={() => onNavigate('detail', ev.id)}
+    >
+      <img src={imgSrc} alt={`${ev.title} flyer`} className="um-featured-card-img" style={{ objectPosition: 'center top' }} />
+      <div className="um-featured-card-overlay" />
+      <div className="um-featured-card-content">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'white', background: 'rgba(252,76,2,0.85)', padding: '2px 6px', borderRadius: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Official event
+          </span>
+        </div>
+        <div className="um-featured-card-title">{ev.title}</div>
+        <div className="um-featured-card-meta">
+          {formatCardDate(ev.date)} · {formatCardTime(ev.time)}<br />{ev.location || ev.city}
+          {ev.entry_fee && <><br /><span style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>{ev.entry_fee}</span></>}
+        </div>
+        <div className="um-featured-card-foot">
+          <span className="um-featured-card-joining" style={{ fontSize: 10 }}>
+            {ev.registration_deadline ? `Reg. by ${ev.registration_deadline}` : ev.city}
+          </span>
+          {ev.registration_link ? (
+            <a
+              href={ev.registration_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="um-featured-card-enrol"
+              onClick={e => e.stopPropagation()}
+              style={{ textDecoration: 'none' }}
+            >
+              Register
+            </a>
+          ) : (
+            <button className="um-featured-card-enrol" onClick={e => { e.stopPropagation(); onNavigate('detail', ev.id); }}>
+              View
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── FAQ accordion ─────────────────────────────────────────────────────────────
+function FAQ() {
+  const [open, setOpen] = useState(null);
+  return (
+    <section aria-label="Frequently asked questions" style={{ padding: '0 0 4px' }}>
+      {FAQS.map((f, i) => (
+        <div
+          key={i}
+          style={{ borderBottom: '1px solid var(--um-border-lt)', padding: '0 16px' }}
+        >
+          <button
+            onClick={() => setOpen(open === i ? null : i)}
+            style={{
+              width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '16px 0', gap: 12, textAlign: 'left',
+              fontFamily: 'var(--um-font-body)', minHeight: 52,
+            }}
+            aria-expanded={open === i}
+          >
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--um-text)', letterSpacing: '-0.01em', lineHeight: 1.4 }}>{f.q}</span>
+            <svg
+              width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ flexShrink: 0, transform: open === i ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease', color: 'var(--um-text-3)' }}
+            >
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          {open === i && (
+            <p style={{ fontSize: 13, color: 'var(--um-text-3)', lineHeight: 1.7, paddingBottom: 16, margin: 0 }}>{f.a}</p>
+          )}
+        </div>
+      ))}
+    </section>
+  );
+}
+
+// ── Main screen ────────────────────────────────────────────────────────────────
 export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode, onToggleDark, savedEvents, onToggleSave, user, enrolments, onSignIn, onSignOut }) {
   const { events } = useAllEvents();
-  const featuredRef = useRef(null);
-  const statsRef    = useRef(null);
-  const [featuredIn, setFeaturedIn] = useState(false);
+  const featuredRef   = useRef(null);
+  const officialRef   = useRef(null);
+  const statsRef      = useRef(null);
+  const [featuredIn, setFeaturedIn]   = useState(false);
+  const [officialIn, setOfficialIn]   = useState(false);
   const [counts, setCounts] = useState({ week: 0, weekend: 0, clubs: 0, cities: 0 });
 
   useEffect(() => {
     const el = featuredRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setFeaturedIn(true); },
-      { threshold: 0.08 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) setFeaturedIn(true); }, { threshold: 0.08 });
+    io.observe(el); return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const el = officialRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) setOfficialIn(true); }, { threshold: 0.08 });
+    io.observe(el); return () => io.disconnect();
   }, []);
 
   useEffect(() => {
@@ -87,22 +233,28 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
     return () => io.disconnect();
   }, []);
 
-  const upcomingAll = events.filter(e => !isEventPast(e.date));
+  const upcomingAll      = events.filter(e => !isEventPast(e.date));
+  const officialEvents   = upcomingAll.filter(e => e.is_official_event);
+  const communityEvents  = upcomingAll.filter(e => !e.is_official_event);
 
   const upcomingEnrolled = (enrolments || [])
     .map(id => events.find(e => e.id === id))
     .filter(e => e && !isEventPast(e.date));
 
-  const featured = upcomingAll.slice(0, 3);
-  const weekendEvents = upcomingAll.filter(e => e.date === WEEKEND_SAT || e.date === WEEKEND_SUN);
+  const featured     = communityEvents.slice(0, 3);
+  const weekendEvents = communityEvents.filter(e => e.date === WEEKEND_SAT || e.date === WEEKEND_SUN);
 
   return (
     <div className="um-screen">
+      {/* JSON-LD structured data */}
+      <JsonLd data={ORG_SCHEMA} />
+      <JsonLd data={FAQ_SCHEMA} />
+
       <Nav onNavigate={onNavigate} currentScreen={currentScreen} darkMode={darkMode} onToggleDark={onToggleDark} user={user} onSignIn={onSignIn} onSignOut={onSignOut} />
 
       <HeroSlideshow onNavigate={onNavigate} />
 
-      {/* Your upcoming sessions (logged-in users with enrolments) */}
+      {/* Your upcoming sessions */}
       {user && upcomingEnrolled.length > 0 && (
         <div style={{ borderBottom: '1px solid var(--um-border-lt)', paddingBottom: 4 }}>
           <div className="um-divider-label" style={{ marginTop: 16 }}>
@@ -163,9 +315,31 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
         </div>
       </div>
 
-      {/* Featured cards */}
+      {/* ── Official Events & Races carousel ────────────────────────────────── */}
+      {officialEvents.length > 0 && (
+        <section aria-label="Upcoming races and official events" className="um-featured-section" ref={officialRef}>
+          <div className="um-featured-section-hd">
+            <span className="um-featured-section-title" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--um-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Races &amp; Official Events
+            </span>
+            <button className="um-featured-section-link" onClick={() => onNavigate('explore')}>
+              See all →
+            </button>
+          </div>
+          <div className="um-featured-scroll">
+            {officialEvents.slice(0, 5).map((ev, i) => (
+              <OfficialEventCard key={ev.id} ev={ev} onNavigate={onNavigate} i={i} revealed={officialIn} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Featured community rides/runs cards ─────────────────────────────── */}
       {featured.length > 0 && (
-        <div className="um-featured-section" ref={featuredRef}>
+        <section aria-label="Featured sessions this weekend" className="um-featured-section" ref={featuredRef}>
           <div className="um-featured-section-hd">
             <span className="um-featured-section-title">Featured this weekend</span>
             <button className="um-featured-section-link" onClick={() => onNavigate('explore')}>
@@ -182,7 +356,7 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
                   style={{ transitionDelay: featuredIn ? `${i * 0.12}s` : '0s' }}
                   onClick={() => onNavigate('detail', ev.id)}
                 >
-                  <img src={ev.image} alt={ev.title} className="um-featured-card-img" />
+                  <img src={ev.image} alt={ev.title} className="um-featured-card-img" loading="lazy" />
                   <div className="um-featured-card-overlay" />
                   <button
                     className={`um-featured-card-save${isSaved ? ' saved' : ''}`}
@@ -215,7 +389,7 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
       {/* This weekend session list */}
@@ -226,7 +400,6 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
             <span className="um-divider-line" />
             <span style={{ fontSize: 10, color: 'var(--um-accent)', fontWeight: 600, whiteSpace: 'nowrap' }}>{weekLabel}</span>
           </div>
-
           {weekendEvents.map(ev => {
             const day = ev.date.split('-')[2];
             const dow = DAYS[new Date(ev.date + 'T00:00:00').getDay()];
@@ -313,8 +486,9 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
         <div style={{ height: 160, position: 'relative', overflow: 'hidden' }}>
           <img
             src="/49fab97914717dd5757d45ba98e97a2c.jpg"
-            alt="Community group"
+            alt="Group of cyclists and runners gathering for a community session in Sri Lanka"
             style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }}
+            loading="lazy"
           />
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,10,12,0.45)' }} />
         </div>
@@ -326,6 +500,12 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
           </button>
         </div>
       </div>
+
+      {/* ── FAQ ──────────────────────────────────────────────────────────────── */}
+      <div className="um-section-label" style={{ margin: '28px 0 4px' }}>
+        <h2 className="um-section-title">Common questions</h2>
+      </div>
+      <FAQ />
 
       <Footer onNavigate={onNavigate} />
     </div>

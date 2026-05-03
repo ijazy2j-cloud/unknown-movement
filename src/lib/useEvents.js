@@ -33,6 +33,13 @@ function normalizeDbEvent(row, joinCount = 0) {
     attendees: [],
     description: row.description || '',
     safety: row.safety_notes ? row.safety_notes.split('\n').filter(Boolean) : [],
+    // Official event fields
+    is_official_event:    !!row.is_official_event,
+    flyer_image_url:      row.flyer_image_url      || null,
+    registration_link:    row.registration_link    || null,
+    registration_deadline:row.registration_deadline|| null,
+    entry_fee:            row.entry_fee            || null,
+    event_website:        row.event_website        || null,
     _fromDb: true,
   };
 }

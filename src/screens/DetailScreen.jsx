@@ -202,13 +202,19 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
       {/* Hero */}
       <div className="um-detail-hero">
         <div className="um-detail-hero-img" style={{ filter: past ? 'saturate(0.45)' : 'none', transition: 'filter 0.3s' }}>
-          <img src={event.image} alt={event.title} />
+          <img src={event.is_official_event && event.flyer_image_url ? event.flyer_image_url : event.image} alt={event.title} loading="lazy" />
           <div className="um-detail-hero-overlay" />
         </div>
         <div className="um-detail-hero-content">
           <div style={{ display: 'flex', gap: 5, marginBottom: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <Badge type={typeKey}>{event.type}</Badge>
-            {event.tags.filter(t => t.type !== 'run' && t.type !== 'ride').slice(0, 2).map(t => (
+            {event.is_official_event && (
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'oklch(72% 0.14 148)', background: 'oklch(72% 0.14 148 / 0.2)', border: '1px solid oklch(72% 0.14 148 / 0.4)', borderRadius: 4, padding: '2px 7px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Official event
+              </span>
+            )}
+            {(event.tags || []).filter(t => t.type !== 'run' && t.type !== 'ride').slice(0, 2).map(t => (
               <Badge key={t.type} type={t.type}>{t.label}</Badge>
             ))}
             {past && <span className="um-completed-badge">Completed</span>}
@@ -218,6 +224,46 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
           <div className="um-detail-meta">{dateLabel} · {event.time} · {event.location}</div>
         </div>
       </div>
+
+      {/* Official event registration info */}
+      {event.is_official_event && !past && (event.registration_link || event.entry_fee || event.registration_deadline || event.event_website) && (
+        <div className="um-section" style={{ background: 'var(--um-accent-lt)', borderColor: 'oklch(42% 0.14 30 / 0.35)' }}>
+          <div className="um-section-hd" style={{ color: 'var(--um-accent)' }}>Registration info</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {event.entry_fee && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: 12, color: 'var(--um-text-3)' }}>Entry fee</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--um-text)' }}>{event.entry_fee}</span>
+              </div>
+            )}
+            {event.registration_deadline && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: 12, color: 'var(--um-text-3)' }}>Registration closes</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--um-text)' }}>{event.registration_deadline}</span>
+              </div>
+            )}
+            {event.event_website && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: 12, color: 'var(--um-text-3)' }}>Website</span>
+                <a href={event.event_website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'var(--um-accent)', fontWeight: 500 }}>
+                  {event.event_website.replace(/^https?:\/\//, '').split('/')[0]}
+                </a>
+              </div>
+            )}
+            {event.registration_link && (
+              <a
+                href={event.registration_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="um-btn um-btn-accent um-btn-full"
+                style={{ textDecoration: 'none', marginTop: 6 }}
+              >
+                Register Now →
+              </a>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Quick stats */}
       <div className="um-quick-stat-row">
@@ -267,14 +313,16 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
       <div className="um-section">
         <div className="um-section-hd">Suitability</div>
         <div className="um-suit-grid">
-          {event.tags.map(t => <Badge key={t.type} type={t.type}>{t.label}</Badge>)}
+          {(event.tags || []).map(t => <Badge key={t.type} type={t.type}>{t.label}</Badge>)}
           <Badge type="tag">Helmet recommended</Badge>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 14 }}>
-          <DiffBars difficulty={event.difficulty} color={diffColor} />
-          <span style={{ fontSize: 12, color: diffColor, fontWeight: 600 }}>{event.difficulty}</span>
-          <span style={{ fontSize: 12, color: 'var(--um-text-4)' }}>difficulty</span>
-        </div>
+        {event.difficulty && !event.is_official_event && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 14 }}>
+            <DiffBars difficulty={event.difficulty} color={diffColor} />
+            <span style={{ fontSize: 12, color: diffColor, fontWeight: 600 }}>{event.difficulty}</span>
+            <span style={{ fontSize: 12, color: 'var(--um-text-4)' }}>difficulty</span>
+          </div>
+        )}
         <div style={{ marginTop: 12, fontSize: 13, color: 'var(--um-text-2)', lineHeight: 1.72 }}>
           {event.description}
         </div>
@@ -312,7 +360,7 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
       <div className="um-section" style={{ borderBottom: past ? '1px solid var(--um-border-lt)' : 'none' }}>
         <div className="um-section-hd">Safety</div>
         <div className="um-notes">
-          {event.safety.map(n => (
+          {(event.safety || []).map(n => (
             <div key={n} className="um-note">
               <span className="um-note-dash">—</span>
               <span>{n}</span>
@@ -369,6 +417,17 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
           <button className="um-btn um-btn-ghost" style={{ flex: 1 }} onClick={() => setShareOpen(true)}>
             Share this session
           </button>
+        ) : event.is_official_event && event.registration_link ? (
+          /* Official event: show Register Now button */
+          <a
+            href={event.registration_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="um-btn um-btn-accent"
+            style={{ flex: 1, textDecoration: 'none' }}
+          >
+            Register Now →
+          </a>
         ) : isEnrolled ? (
           <>
             <button
@@ -394,7 +453,7 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
               onClick={handleEnrol}
               disabled={enrolLoading}
             >
-              {enrolLoading ? 'Joining…' : user ? 'Enrol' : 'Enrol'}
+              {enrolLoading ? 'Joining…' : 'Enrol'}
             </button>
             <a href={waHref} target="_blank" rel="noopener noreferrer" className="um-btn um-btn-outline" style={{ flex: 1 }}>
               WhatsApp

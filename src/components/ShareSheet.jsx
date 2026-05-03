@@ -1,19 +1,46 @@
 import { useState } from 'react';
 
-// ── REPLACE WITH YOUR COMMUNITY WHATSAPP NUMBER (no + or spaces) ──
 const WA_NUMBER = '94770000000';
+const BASE_URL  = 'https://unknownmovement.netlify.app';
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function formatShareDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+function formatShareTime(timeStr) {
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+}
 
 export default function ShareSheet({ event, onClose }) {
   const [copied, setCopied] = useState(false);
-  const url = `https://unknownmovement.lk/e/${event.id}`;
-  const waText = `${event.title}\n${event.date} at ${event.time} · ${event.location}\n\n${url}`;
+
+  const url = `${BASE_URL}/event/${encodeURIComponent(event.id)}`;
+
+  // Rich formatted share text
+  const dateStr = formatShareDate(event.date);
+  const timeStr = formatShareTime(event.time);
+  const distStr = event.km && event.km !== '—' ? ` · ${event.km}km` : '';
+  const paceStr = event.pace && event.pace !== '—' && !event.is_official_event ? ` · ${event.pace}` : '';
+  const feeStr  = event.entry_fee ? ` · ${event.entry_fee}` : '';
+
+  const regLink = event.is_official_event && event.registration_link ? event.registration_link : url;
+
+  const waText = event.is_official_event
+    ? `🏁 *${event.title}*\n📅 ${dateStr} at ${timeStr}${feeStr}\n📍 ${event.location || event.city}\n\nRegister: ${regLink}`
+    : `🚴 *${event.title}*\n📅 ${dateStr} at ${timeStr}${distStr}${paceStr}\n📍 ${event.location || event.city}\n\nSign up: ${url}`;
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(event.is_official_event && event.registration_link ? event.registration_link : url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch { /* silent fallback */ }
+    } catch {}
   };
 
   const shareWhatsApp = () => {
@@ -21,10 +48,14 @@ export default function ShareSheet({ event, onClose }) {
   };
 
   const shareNative = async () => {
-    if (navigator.share) {
-      try { await navigator.share({ title: event.title, text: event.description, url }); }
-      catch { /* user cancelled */ }
-    }
+    if (!navigator.share) return;
+    try {
+      await navigator.share({
+        title: event.title,
+        text: `${dateStr} · ${event.location || event.city}${distStr}`,
+        url,
+      });
+    } catch {}
   };
 
   return (
@@ -32,7 +63,7 @@ export default function ShareSheet({ event, onClose }) {
       <div className="um-sheet-backdrop" onClick={onClose} />
       <div className="um-sheet">
         <div className="um-sheet-handle" />
-        <div className="um-sheet-hd">Share this session</div>
+        <div className="um-sheet-hd">Share this {event.is_official_event ? 'event' : 'session'}</div>
         <div className="um-sheet-event-name">{event.title}</div>
         <div className="um-sheet-row">
           <button className="um-sheet-btn" onClick={copyLink}>

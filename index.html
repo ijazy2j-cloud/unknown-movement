@@ -4,46 +4,54 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- ── Favicon & PWA icons ─────────────────────────────────────────────── -->
+    <!-- ── Favicon & PWA ────────────────────────────────────────────────────── -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#FC4C02" />
 
-    <!-- ── Primary SEO ────────────────────────────────────────────────────── -->
-    <title>Unknown Movement | Find Your Next Ride or Run in Sri Lanka</title>
-    <meta name="description" content="Discover and join group rides, runs, coffee sessions, and endurance events across Sri Lanka. Connect with athletes and clubs near you." />
-    <meta name="keywords" content="running, cycling, Sri Lanka, group rides, athletics, training, clubs, Colombo, Kandy, Galle, triathlon, endurance, outdoor" />
+    <!-- ── Primary SEO ──────────────────────────────────────────────────────── -->
+    <title>Unknown Movement | Group Rides, Runs &amp; Cycling Events in Sri Lanka</title>
+    <meta name="description" content="Discover and join group rides, runs, coffee sessions, marathons and endurance events across Sri Lanka. Connect with cycling clubs and running groups in Colombo, Kandy, Galle." />
+    <meta name="keywords" content="running clubs Sri Lanka, cycling Colombo, group rides Kandy, marathon Sri Lanka, triathlon, training partners, athletic events Sri Lanka, Galle Face running, Negombo cycling, Colombo cycling club, Sri Lanka runners, endurance events, sportive, cycling events" />
     <meta name="author" content="Unknown Movement" />
     <meta name="robots" content="index, follow" />
+    <meta name="language" content="en" />
+    <meta name="geo.region" content="LK" />
+    <meta name="geo.placename" content="Sri Lanka" />
     <link rel="canonical" href="https://unknownmovement.netlify.app/" />
 
-    <!-- ── Open Graph (Facebook, WhatsApp, LinkedIn) ─────────────────────── -->
-    <meta property="og:type"        content="website" />
-    <meta property="og:site_name"   content="Unknown Movement" />
-    <meta property="og:title"       content="Unknown Movement | Find Your Next Ride or Run in Sri Lanka" />
-    <meta property="og:description" content="Discover and join group rides, runs, coffee sessions, and endurance events across Sri Lanka. Connect with athletes and clubs near you." />
-    <meta property="og:url"         content="https://unknownmovement.netlify.app/" />
-    <meta property="og:image"       content="https://unknownmovement.netlify.app/9cfe853c44722834d35684daba4c955b.jpg" />
+    <!-- ── Open Graph (Facebook, WhatsApp, LinkedIn) ────────────────────────── -->
+    <meta property="og:type"         content="website" />
+    <meta property="og:site_name"    content="Unknown Movement" />
+    <meta property="og:title"        content="Unknown Movement | Group Rides, Runs &amp; Cycling Events in Sri Lanka" />
+    <meta property="og:description"  content="Discover and join group rides, runs, coffee sessions and endurance events across Sri Lanka. Connect with athletes and clubs near you." />
+    <meta property="og:url"          content="https://unknownmovement.netlify.app/" />
+    <meta property="og:image"        content="https://unknownmovement.netlify.app/9cfe853c44722834d35684daba4c955b.jpg" />
     <meta property="og:image:width"  content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:locale"      content="en_LK" />
+    <meta property="og:image:alt"    content="Cyclists and runners at a group session in Sri Lanka" />
+    <meta property="og:locale"       content="en_LK" />
 
-    <!-- ── Twitter Card ───────────────────────────────────────────────────── -->
+    <!-- ── Twitter Card ─────────────────────────────────────────────────────── -->
     <meta name="twitter:card"        content="summary_large_image" />
-    <meta name="twitter:title"       content="Unknown Movement | Find Your Next Ride or Run in Sri Lanka" />
-    <meta name="twitter:description" content="Discover and join group rides, runs, coffee sessions, and endurance events across Sri Lanka. Connect with athletes and clubs near you." />
+    <meta name="twitter:title"       content="Unknown Movement | Group Rides, Runs &amp; Cycling Events in Sri Lanka" />
+    <meta name="twitter:description" content="Discover and join group rides, runs and endurance events across Sri Lanka." />
     <meta name="twitter:image"       content="https://unknownmovement.netlify.app/9cfe853c44722834d35684daba4c955b.jpg" />
 
-    <!-- ── Fonts ──────────────────────────────────────────────────────────── -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- ── Resource hints ───────────────────────────────────────────────────── -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://unpkg.com" />
+    <link rel="dns-prefetch" href="https://tile.openstreetmap.org" />
 
-    <!-- ── Leaflet CSS ────────────────────────────────────────────────────── -->
+    <!-- ── Fonts ────────────────────────────────────────────────────────────── -->
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+    <!-- ── Leaflet CSS ──────────────────────────────────────────────────────── -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-    <!-- ── Theme: apply saved theme before first paint to avoid flash ─────── -->
+    <!-- ── Theme: apply saved theme before first paint to avoid flash ───────── -->
     <script>
       (function() {
         var t = localStorage.getItem('um-theme') || 'dark';

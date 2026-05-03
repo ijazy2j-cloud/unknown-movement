@@ -116,9 +116,10 @@ export default function ExploreScreen({ onNavigate, goBack, currentScreen, darkM
   };
 
   const base = events.filter(e => {
-    if (activeTab === 'upcoming') return !isEventPast(e.date);
+    if (activeTab === 'upcoming') return !isEventPast(e.date) && !e.is_official_event;
     if (activeTab === 'past')     return isEventPast(e.date);
     if (activeTab === 'saved')    return savedEvents.includes(e.id);
+    if (activeTab === 'races')    return !!e.is_official_event && !isEventPast(e.date);
     return true;
   });
 
@@ -166,11 +167,11 @@ export default function ExploreScreen({ onNavigate, goBack, currentScreen, darkM
 
       {/* Tabs */}
       <div className="um-tabs">
-        {[['upcoming', 'Upcoming'], ['past', 'Past'], ['saved', 'Saved']].map(([val, label]) => (
+        {[['upcoming', 'Upcoming'], ['races', 'Races'], ['past', 'Past'], ['saved', 'Saved']].map(([val, label]) => (
           <button
             key={val}
             className={`um-tab${activeTab === val ? ' active' : ''}`}
-            onClick={() => setActiveTab(val)}
+            onClick={() => { setActiveTab(val); setViewMode('list'); setActiveFilters([]); }}
           >
             {label}
             {val === 'saved' && savedEvents.length > 0 && (
