@@ -24,7 +24,9 @@
       "Bash(chmod 666 /c/Users/User/projects/unknown-movement/package.json)",
       "Bash(chmod 666 /c/Users/User/projects/unknown-movement/package-lock.json)",
       "Bash(node -e \"const p=require\\('./package-lock.json'\\); console.log\\(Object.keys\\(p.packages\\).filter\\(k=>k.includes\\('leaflet'\\)\\)\\)\")",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(rm -f .git/COMMIT_EDITMSG)",
+      "Bash(git merge *)"
     ]
   }
 }
