@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import Nav from '../components/Nav';
 import Badge from '../components/Badge';
 import ShareSheet from '../components/ShareSheet';
 import WeatherWidget from '../components/WeatherWidget';
 import { supabase } from '../lib/supabase';
 import { useEventById } from '../lib/useEvents';
+
+const EventMap = lazy(() => import('../components/EventMap'));
 
 const TODAY = new Date().toISOString().slice(0, 10);
 function isEventPast(d) { return d < TODAY; }
@@ -253,31 +255,12 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
         </div>
       )}
 
-      {/* Route */}
+      {/* Route map */}
       <div className="um-section">
-        <div className="um-section-hd">Route</div>
-        <div style={{ height: 140, borderRadius: 8, overflow: 'hidden', position: 'relative' }}>
-          <img
-            src="/b2df6b431f8adf438c1c8e7d62d58f7c.jpg"
-            alt="Route overview"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%' }}
-          />
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,10,12,0.18)', borderRadius: 8 }} />
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
-          {[
-            { label: 'Start',    val: event.location },
-            { label: 'Distance', val: `${event.km} km · ${event.elevation}m gain` },
-          ].map(p => (
-            <div key={p.label} style={{ background: 'var(--um-bg2)', borderRadius: 7, padding: '9px 12px' }}>
-              <div style={{ fontSize: 9, color: 'var(--um-text-4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>{p.label}</div>
-              <div style={{ fontSize: 12, color: 'var(--um-text)', fontWeight: 500 }}>{p.val}</div>
-            </div>
-          ))}
-        </div>
-        <button style={{ marginTop: 12, fontSize: 11, color: 'var(--um-accent)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3, padding: 0, fontFamily: 'inherit', fontWeight: 500 }}>
-          Open in Strava →
-        </button>
+        <div className="um-section-hd">Route map</div>
+        <Suspense fallback={<div className="um-skeleton" style={{ height: 280, borderRadius: 10 }} />}>
+          <EventMap event={event} />
+        </Suspense>
       </div>
 
       {/* Suitability + difficulty */}

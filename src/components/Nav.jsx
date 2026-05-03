@@ -25,96 +25,169 @@ function MoonIcon() {
 }
 
 export default function Nav({ showBack, goBack, onNavigate, currentScreen, darkMode, onToggleDark, user, onSignIn, onSignOut }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef(null);
+  const [menuOpen,   setMenuOpen]   = useState(false); // user avatar dropdown
+  const [mobileOpen, setMobileOpen] = useState(false); // hamburger menu
+  const userMenuRef = useRef(null);
 
+  // Close user dropdown on outside click
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setMenuOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [menuOpen]);
 
-  const initials = user?.email
-    ? user.email.slice(0, 2).toUpperCase()
-    : '?';
+  // Close mobile menu on resize to desktop
+  useEffect(() => {
+    const handler = () => { if (window.innerWidth >= 768) setMobileOpen(false); };
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  const go = (screen) => {
+    onNavigate(screen);
+    setMobileOpen(false);
+    setMenuOpen(false);
+  };
+
+  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : '?';
 
   return (
-    <nav className="um-nav">
-      <div className="um-nav-left">
-        {showBack && (
-          <button className="um-nav-back-btn" onClick={goBack} aria-label="Go back">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        )}
-        <button className="um-logo-btn" onClick={() => onNavigate('home')}>
-          Unknown Movement
-        </button>
-      </div>
-      <div className="um-nav-right">
-        <button
-          className={`um-nav-link${currentScreen === 'explore' ? ' active' : ''}`}
-          onClick={() => onNavigate('explore')}
-        >
-          Explore
-        </button>
-        <button
-          className={`um-nav-cta${currentScreen === 'submit' ? ' active' : ''}`}
-          onClick={() => onNavigate('submit')}
-        >
-          Submit
-        </button>
-        <button
-          className="um-dark-toggle"
-          onClick={onToggleDark}
-          aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {darkMode ? <SunIcon /> : <MoonIcon />}
-        </button>
-        {user ? (
-          <div className="um-user-menu-wrap" ref={menuRef}>
-            <button
-              className={`um-user-avatar${menuOpen ? ' open' : ''}`}
-              onClick={() => setMenuOpen(o => !o)}
-              aria-label="User menu"
-            >
-              {initials}
+    <>
+      <nav className="um-nav">
+        <div className="um-nav-left">
+          {showBack && (
+            <button className="um-nav-back-btn" onClick={goBack} aria-label="Go back">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
-            {menuOpen && (
-              <div className="um-user-menu">
-                <div className="um-user-menu-email">{user.email}</div>
-                <button
-                  className="um-user-menu-item"
-                  onClick={() => { onNavigate('myevents'); setMenuOpen(false); }}
-                >
+          )}
+          <button className="um-logo-btn" onClick={() => go('home')}>
+            Unknown Movement
+          </button>
+        </div>
+
+        <div className="um-nav-right">
+          {/* Desktop-only nav links — hidden on mobile via CSS */}
+          <div className="um-nav-desktop-links">
+            <button
+              className={`um-nav-link${currentScreen === 'explore' ? ' active' : ''}`}
+              onClick={() => onNavigate('explore')}
+            >
+              Explore
+            </button>
+            <button
+              className={`um-nav-cta${currentScreen === 'submit' ? ' active' : ''}`}
+              onClick={() => onNavigate('submit')}
+            >
+              Submit
+            </button>
+          </div>
+
+          {/* Dark mode toggle — always visible */}
+          <button
+            className="um-dark-toggle"
+            onClick={onToggleDark}
+            aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {darkMode ? <SunIcon /> : <MoonIcon />}
+          </button>
+
+          {/* User auth — always visible */}
+          {user ? (
+            <div className="um-user-menu-wrap" ref={userMenuRef}>
+              <button
+                className={`um-user-avatar${menuOpen ? ' open' : ''}`}
+                onClick={() => setMenuOpen(o => !o)}
+                aria-label="User menu"
+              >
+                {initials}
+              </button>
+              {menuOpen && (
+                <div className="um-user-menu">
+                  <div className="um-user-menu-email">{user.email}</div>
+                  <button className="um-user-menu-item" onClick={() => go('myevents')}>My Events</button>
+                  <button className="um-user-menu-item" onClick={() => go('explore')}>Saved</button>
+                  <div className="um-user-menu-sep" />
+                  <button
+                    className="um-user-menu-item um-user-menu-signout"
+                    onClick={() => { onSignOut(); setMenuOpen(false); }}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button className="um-nav-signin" onClick={onSignIn}>Sign in</button>
+          )}
+
+          {/* Hamburger — mobile only, hidden on desktop via CSS */}
+          <button
+            className={`um-hamburger${mobileOpen ? ' open' : ''}`}
+            onClick={() => setMobileOpen(o => !o)}
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileOpen}
+          >
+            <span className="um-hamburger-line" />
+            <span className="um-hamburger-line" />
+            <span className="um-hamburger-line" />
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile slide-down menu panel */}
+      {mobileOpen && (
+        <>
+          <div className="um-mobile-menu-panel" role="navigation" aria-label="Mobile navigation">
+            <button
+              className={`um-mobile-menu-item${currentScreen === 'explore' ? ' active' : ''}`}
+              onClick={() => go('explore')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+              </svg>
+              Explore
+            </button>
+            <button
+              className={`um-mobile-menu-item${currentScreen === 'submit' ? ' active' : ''}`}
+              onClick={() => go('submit')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Submit a session
+            </button>
+            {user && (
+              <>
+                <div className="um-mobile-menu-sep" />
+                <button className="um-mobile-menu-item" onClick={() => go('myevents')}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
                   My Events
                 </button>
-                <button
-                  className="um-user-menu-item"
-                  onClick={() => { onNavigate('explore'); setMenuOpen(false); }}
-                >
-                  Saved
+                <button className="um-mobile-menu-item" onClick={() => go('explore')}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                  Saved sessions
                 </button>
-                <div className="um-user-menu-sep" />
-                <button
-                  className="um-user-menu-item um-user-menu-signout"
-                  onClick={() => { onSignOut(); setMenuOpen(false); }}
-                >
-                  Sign out
-                </button>
-              </div>
+              </>
             )}
           </div>
-        ) : (
-          <button className="um-nav-signin" onClick={onSignIn}>
-            Sign in
-          </button>
-        )}
-      </div>
-    </nav>
+
+          {/* Backdrop — tap outside to close */}
+          <div
+            className="um-mobile-menu-backdrop"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+        </>
+      )}
+    </>
   );
 }

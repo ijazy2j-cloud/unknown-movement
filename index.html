@@ -2,13 +2,48 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Unknown Movement</title>
+
+    <!-- ── Favicon & PWA icons ─────────────────────────────────────────────── -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#FC4C02" />
+
+    <!-- ── Primary SEO ────────────────────────────────────────────────────── -->
+    <title>Unknown Movement | Find Your Next Ride or Run in Sri Lanka</title>
+    <meta name="description" content="Discover and join group rides, runs, coffee sessions, and endurance events across Sri Lanka. Connect with athletes and clubs near you." />
+    <meta name="keywords" content="running, cycling, Sri Lanka, group rides, athletics, training, clubs, Colombo, Kandy, Galle, triathlon, endurance, outdoor" />
+    <meta name="author" content="Unknown Movement" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://unknownmovement.netlify.app/" />
+
+    <!-- ── Open Graph (Facebook, WhatsApp, LinkedIn) ─────────────────────── -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:site_name"   content="Unknown Movement" />
+    <meta property="og:title"       content="Unknown Movement | Find Your Next Ride or Run in Sri Lanka" />
+    <meta property="og:description" content="Discover and join group rides, runs, coffee sessions, and endurance events across Sri Lanka. Connect with athletes and clubs near you." />
+    <meta property="og:url"         content="https://unknownmovement.netlify.app/" />
+    <meta property="og:image"       content="https://unknownmovement.netlify.app/9cfe853c44722834d35684daba4c955b.jpg" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale"      content="en_LK" />
+
+    <!-- ── Twitter Card ───────────────────────────────────────────────────── -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="Unknown Movement | Find Your Next Ride or Run in Sri Lanka" />
+    <meta name="twitter:description" content="Discover and join group rides, runs, coffee sessions, and endurance events across Sri Lanka. Connect with athletes and clubs near you." />
+    <meta name="twitter:image"       content="https://unknownmovement.netlify.app/9cfe853c44722834d35684daba4c955b.jpg" />
+
+    <!-- ── Fonts ──────────────────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- Apply saved theme before first paint to avoid flash -->
+
+    <!-- ── Leaflet CSS ────────────────────────────────────────────────────── -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- ── Theme: apply saved theme before first paint to avoid flash ─────── -->
     <script>
       (function() {
         var t = localStorage.getItem('um-theme') || 'dark';

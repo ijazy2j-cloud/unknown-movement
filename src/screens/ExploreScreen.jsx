@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import Nav from '../components/Nav';
 import SessionRow from '../components/SessionRow';
 import { useAllEvents } from '../lib/useEvents';
+
+const ExploreMap = lazy(() => import('../components/ExploreMap'));
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -105,6 +107,7 @@ export default function ExploreScreen({ onNavigate, goBack, currentScreen, darkM
   const [activeTab, setActiveTab] = useState('upcoming');
   const [activeFilters, setActiveFilters] = useState([]);
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
 
   const { events, loading: isLoading } = useAllEvents();
 
@@ -199,21 +202,58 @@ export default function ExploreScreen({ onNavigate, goBack, currentScreen, darkM
         )}
       </div>
 
-      {/* Result count */}
-      <div className="um-explore-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Result count + view toggle */}
+      <div className="um-explore-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 11, color: 'var(--um-text-4)' }}>
           {isLoading ? 'Loading…' : `${filtered.length} session${filtered.length !== 1 ? 's' : ''}`}
         </span>
+        <div className="um-view-toggle">
+          <button
+            className={`um-view-toggle-btn${viewMode === 'list' ? ' active' : ''}`}
+            onClick={() => setViewMode('list')}
+            aria-label="List view"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            List
+          </button>
+          <button
+            className={`um-view-toggle-btn${viewMode === 'map' ? ' active' : ''}`}
+            onClick={() => setViewMode('map')}
+            aria-label="Map view"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+              <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+            </svg>
+            Map
+          </button>
+        </div>
       </div>
 
-      {/* Content */}
-      {isLoading ? (
+      {/* Map view */}
+      {viewMode === 'map' && (
+        <div style={{ margin: '10px 0' }}>
+          <Suspense fallback={<div className="um-skeleton" style={{ height: 'calc(100svh - 120px)' }} />}>
+            <ExploreMap
+              events={filtered}
+              onNavigate={onNavigate}
+              enrolments={enrolments}
+            />
+          </Suspense>
+        </div>
+      )}
+
+      {/* List content */}
+      {viewMode === 'list' && isLoading ? (
         <>
           <SkeletonRow /><SkeletonRow /><SkeletonRow /><SkeletonRow />
         </>
-      ) : filtered.length === 0 ? (
+      ) : viewMode === 'list' && filtered.length === 0 ? (
         <EmptyState tab={activeTab} hasFilters={hasFilters} />
-      ) : (
+      ) : viewMode === 'list' && (
         dates.map(date => (
           <div key={date}>
             <div className="um-divider-label">
