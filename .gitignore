@@ -25,3 +25,7 @@ dist-ssr
 
 # Project bundle
 unknown-movement.zip
+
+# Environment variables
+.env
+.env.local

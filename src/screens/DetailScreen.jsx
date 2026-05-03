@@ -3,7 +3,21 @@ import Nav from '../components/Nav';
 import Badge from '../components/Badge';
 import ShareSheet from '../components/ShareSheet';
 import WeatherWidget from '../components/WeatherWidget';
-import { getEvent, isPast } from '../data/events';
+import { supabase } from '../lib/supabase';
+import { useEventById } from '../lib/useEvents';
+
+const TODAY = new Date().toISOString().slice(0, 10);
+function isEventPast(d) { return d < TODAY; }
+
+const EMPTY_EVENT = {
+  id: '', title: '', date: TODAY, time: '06:00', location: '', city: '',
+  km: '0', elevation: '0', pace: '—', paceUnit: '/km',
+  difficulty: 'Social', joining: 0,
+  organizer: { name: '', initials: '', sub: '', bg: 'oklch(36% 0.08 42)' },
+  tags: [], lat: null, lng: null,
+  image: '/9cfe853c44722834d35684daba4c955b.jpg',
+  attendees: [], description: '', safety: [],
+};
 
 function DiffBars({ difficulty, color }) {
   const bars = difficulty === 'Hard' ? 3 : difficulty === 'Moderate' ? 2 : 1;
@@ -54,6 +68,33 @@ function resizePhoto(file, onDone) {
   reader.readAsDataURL(file);
 }
 
+function downloadICS(event) {
+  const [yr, mo, dy] = event.date.split('-');
+  const [hr, mn] = event.time.split(':');
+  const pad = n => String(parseInt(n, 10)).padStart(2, '0');
+  const dtStart = `${yr}${mo}${dy}T${hr}${mn}00`;
+  const dtEnd   = `${yr}${mo}${dy}T${pad(parseInt(hr, 10) + 2)}${mn}00`;
+  const stamp   = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Unknown Movement//EN',
+    'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+    `UID:${event.id}@unknownmovement`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART;TZID=Asia/Colombo:${dtStart}`,
+    `DTEND;TZID=Asia/Colombo:${dtEnd}`,
+    `SUMMARY:${event.title}`,
+    `LOCATION:${event.location}`,
+    `DESCRIPTION:${(event.description || '').replace(/[\r\n]+/g, '\\n')}`,
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n');
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${event.id}.ics`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 const DIFF_COLORS = {
   Hard:     'var(--um-accent)',
   Moderate: 'oklch(68% 0.10 72)',
@@ -61,32 +102,87 @@ const DIFF_COLORS = {
   Easy:     'oklch(68% 0.12 220)',
 };
 
-export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMode, onToggleDark, savedEvents, onToggleSave, selectedEventId, followedClubs, onToggleFollow }) {
-  const event = getEvent(selectedEventId) || getEvent('colombo-coffee-loop');
-  const past = isPast(event.date);
+export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMode, onToggleDark, savedEvents, onToggleSave, selectedEventId, followedClubs, onToggleFollow, user, onRequireAuth, enrolments, onToggleEnrol, onSignIn, onSignOut }) {
+  const { event: fetchedEvent, loading: eventLoading } = useEventById(selectedEventId);
+  const event = fetchedEvent ?? EMPTY_EVENT;
+  const past = isEventPast(event.date);
   const isSaved = savedEvents.includes(event.id);
   const isFollowing = followedClubs && followedClubs.includes(event.organizer.name);
+  const isEnrolled = enrolments && enrolments.includes(event.id);
 
   const [shareOpen, setShareOpen] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState(null);
   const [photos, setPhotos] = useState([]);
+  const [enrolConfirm, setEnrolConfirm] = useState(false);
+  const [enrolLoading, setEnrolLoading] = useState(false);
   const photoInputRef = useRef(null);
 
   useEffect(() => {
-    try { setPhotos(JSON.parse(localStorage.getItem(`um-photos-${event.id}`) || '[]')); }
-    catch { setPhotos([]); }
+    setEnrolConfirm(false);
   }, [event.id]);
 
-  const handlePhotoAdd = e => {
+  useEffect(() => {
+    if (!past) return;
+    if (supabase) {
+      supabase.from('event_photos').select('photo_url').eq('event_id', event.id)
+        .then(({ data }) => {
+          if (data?.length) setPhotos(data.map(r => r.photo_url));
+          else {
+            try { setPhotos(JSON.parse(localStorage.getItem(`um-photos-${event.id}`) || '[]')); }
+            catch { setPhotos([]); }
+          }
+        });
+    } else {
+      try { setPhotos(JSON.parse(localStorage.getItem(`um-photos-${event.id}`) || '[]')); }
+      catch { setPhotos([]); }
+    }
+  }, [event.id, past]);
+
+  const handlePhotoAdd = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     e.target.value = '';
-    resizePhoto(file, dataUrl => {
-      const updated = [...photos, dataUrl].slice(-4);
-      setPhotos(updated);
-      try { localStorage.setItem(`um-photos-${event.id}`, JSON.stringify(updated)); } catch {}
-    });
+
+    if (supabase && user) {
+      resizePhoto(file, async (dataUrl) => {
+        const blob = await fetch(dataUrl).then(r => r.blob());
+        const path = `${event.id}/${user.id}/${Date.now()}.jpg`;
+        const { error } = await supabase.storage.from('event-photos').upload(path, blob, { contentType: 'image/jpeg' });
+        if (error) { console.error(error); return; }
+        const { data: { publicUrl } } = supabase.storage.from('event-photos').getPublicUrl(path);
+        await supabase.from('event_photos').insert({ event_id: event.id, photo_url: publicUrl, uploaded_by: user.id });
+        setPhotos(prev => [...prev, publicUrl].slice(-4));
+      });
+    } else {
+      resizePhoto(file, dataUrl => {
+        const updated = [...photos, dataUrl].slice(-4);
+        setPhotos(updated);
+        try { localStorage.setItem(`um-photos-${event.id}`, JSON.stringify(updated)); } catch {}
+      });
+    }
   };
+
+  const handleEnrol = async () => {
+    if (!user) { onSignIn && onSignIn(); return; }
+    setEnrolLoading(true);
+    const didEnrol = await onToggleEnrol(event.id);
+    setEnrolLoading(false);
+    if (didEnrol) setEnrolConfirm(true);
+  };
+
+  if (eventLoading) {
+    return (
+      <div className="um-screen">
+        <Nav showBack={true} goBack={goBack} onNavigate={onNavigate} currentScreen={currentScreen} darkMode={darkMode} onToggleDark={onToggleDark} user={user} onSignIn={onSignIn} onSignOut={onSignOut} />
+        <div className="um-skeleton" style={{ height: 220, width: '100%', borderRadius: 0 }} />
+        <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="um-skeleton" style={{ height: 28, width: '72%', borderRadius: 4 }} />
+          <div className="um-skeleton" style={{ height: 14, width: '52%', borderRadius: 4 }} />
+          <div className="um-skeleton" style={{ height: 14, width: '40%', borderRadius: 4, marginTop: 4 }} />
+        </div>
+      </div>
+    );
+  }
 
   const typeKey = event.type === 'Ride' ? 'ride' : event.type === 'Run' ? 'run' : 'tri';
   const diffColor = DIFF_COLORS[event.difficulty] || 'var(--um-text-3)';
@@ -99,7 +195,7 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
 
   return (
     <div className="um-screen">
-      <Nav showBack={true} goBack={goBack} onNavigate={onNavigate} currentScreen={currentScreen} darkMode={darkMode} onToggleDark={onToggleDark} />
+      <Nav showBack={true} goBack={goBack} onNavigate={onNavigate} currentScreen={currentScreen} darkMode={darkMode} onToggleDark={onToggleDark} user={user} onSignIn={onSignIn} onSignOut={onSignOut} />
 
       {/* Hero */}
       <div className="um-detail-hero">
@@ -114,6 +210,7 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
               <Badge key={t.type} type={t.type}>{t.label}</Badge>
             ))}
             {past && <span className="um-completed-badge">Completed</span>}
+            {isEnrolled && !past && <span className="um-going-badge">You're going</span>}
           </div>
           <div className="um-detail-title">{event.title}</div>
           <div className="um-detail-meta">{dateLabel} · {event.time} · {event.location}</div>
@@ -254,25 +351,32 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
               ))}
             </div>
           )}
-          <input
-            ref={photoInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={handlePhotoAdd}
-          />
-          <button
-            className="um-btn um-btn-outline um-btn-full"
-            style={{ marginTop: photos.length > 0 ? 12 : 0 }}
-            onClick={() => photoInputRef.current?.click()}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 7 }}>
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            Add photo
-          </button>
+          {photos.length < 4 && (
+            <>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handlePhotoAdd}
+              />
+              <button
+                className="um-btn um-btn-outline um-btn-full"
+                style={{ marginTop: photos.length > 0 ? 12 : 0 }}
+                onClick={() => {
+                  if (!user && onSignIn) { onSignIn(); return; }
+                  photoInputRef.current?.click();
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 7 }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                {user ? 'Add photo' : 'Sign in to add photo'}
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -282,10 +386,32 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
           <button className="um-btn um-btn-ghost" style={{ flex: 1 }} onClick={() => setShareOpen(true)}>
             Share this session
           </button>
+        ) : isEnrolled ? (
+          <>
+            <button
+              className="um-btn um-btn-going"
+              style={{ flex: 2 }}
+              onClick={handleEnrol}
+              disabled={enrolLoading}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              You're going · Undo
+            </button>
+            <a href={waHref} target="_blank" rel="noopener noreferrer" className="um-btn um-btn-outline" style={{ flex: 1 }}>
+              WhatsApp
+            </a>
+          </>
         ) : (
           <>
-            <button className="um-btn um-btn-accent" style={{ flex: 2 }} onClick={() => onNavigate('submit')}>
-              I'm interested
+            <button
+              className="um-btn um-btn-accent"
+              style={{ flex: 2 }}
+              onClick={handleEnrol}
+              disabled={enrolLoading}
+            >
+              {enrolLoading ? 'Joining…' : user ? 'Enrol' : 'Enrol'}
             </button>
             <a href={waHref} target="_blank" rel="noopener noreferrer" className="um-btn um-btn-outline" style={{ flex: 1 }}>
               WhatsApp
@@ -309,6 +435,30 @@ export default function DetailScreen({ onNavigate, goBack, currentScreen, darkMo
           </svg>
         </button>
       </div>
+
+      {/* Enrolment confirmation */}
+      {enrolConfirm && (
+        <div className="um-enrol-confirm">
+          <div className="um-enrol-confirm-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div className="um-enrol-confirm-title">You're going!</div>
+            <div className="um-enrol-confirm-meta">{event.title} · {dateLabel}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button className="um-btn um-btn-outline um-btn-sm" onClick={() => downloadICS(event)}>
+              + Calendar
+            </button>
+            <button
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--um-text-4)', fontSize: 20, padding: '0 4px', lineHeight: 1 }}
+              onClick={() => setEnrolConfirm(false)}
+            >×</button>
+          </div>
+        </div>
+      )}
 
       {shareOpen && <ShareSheet event={event} onClose={() => setShareOpen(false)} />}
 

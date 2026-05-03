@@ -34,7 +34,7 @@ function HeartIcon({ filled }) {
   );
 }
 
-export default function SessionRow({ title, type, day, dow, time, location, km, pace, difficulty, joining, tags = [], completed, saved, onSave, onClick }) {
+export default function SessionRow({ title, type, day, dow, time, location, km, pace, difficulty, joining, tags = [], completed, enrolled, saved, onSave, onClick }) {
   const diffColor = DIFF_COLORS[difficulty] || 'var(--um-text-3)';
   const typeKey = type === 'Ride' ? 'ride' : type === 'Run' ? 'run' : 'tri';
 
@@ -65,6 +65,7 @@ export default function SessionRow({ title, type, day, dow, time, location, km, 
               <Badge key={t.label} type={t.type}>{t.label}</Badge>
             ))}
             {completed && <span className="um-completed-badge">Completed</span>}
+            {enrolled && !completed && <span className="um-going-badge">Going</span>}
           </div>
         )}
       </div>

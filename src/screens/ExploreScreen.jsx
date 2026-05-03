@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Nav from '../components/Nav';
 import SessionRow from '../components/SessionRow';
-import { EVENTS, isPast } from '../data/events';
+import { useAllEvents } from '../lib/useEvents';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+const TODAY = new Date().toISOString().slice(0, 10);
+function isEventPast(d) { return d < TODAY; }
 
 function getDOW(dateStr) {
   return DAYS[new Date(dateStr + 'T00:00:00').getDay()];
@@ -14,6 +17,19 @@ function getDateLabel(dateStr) {
   return `${getDOW(dateStr)} ${parseInt(d, 10)} ${MONTHS[parseInt(m, 10) - 1]}`;
 }
 
+function getWeekendDates() {
+  const d = new Date();
+  const day = d.getDay();
+  const sat = new Date(d);
+  if (day === 0) sat.setDate(d.getDate() - 1);
+  else if (day < 6) sat.setDate(d.getDate() + (6 - day));
+  const sun = new Date(sat);
+  sun.setDate(sat.getDate() + 1);
+  return [sat.toISOString().slice(0, 10), sun.toISOString().slice(0, 10)];
+}
+
+const [WEEKEND_SAT, WEEKEND_SUN] = getWeekendDates();
+
 const FILTER_CHIPS = ['Ride', 'Run', 'This weekend', 'Coffee stop', 'No drop', 'Beginner'];
 
 function matchesFilters(ev, filters) {
@@ -21,10 +37,10 @@ function matchesFilters(ev, filters) {
   return filters.every(f => {
     if (f === 'Ride')         return ev.type === 'Ride';
     if (f === 'Run')          return ev.type === 'Run';
-    if (f === 'This weekend') return ev.date === '2026-05-03' || ev.date === '2026-05-04';
-    if (f === 'Coffee stop')  return ev.tags.some(t => t.type === 'coffee');
-    if (f === 'No drop')      return ev.tags.some(t => t.type === 'nodrop');
-    if (f === 'Beginner')     return ev.tags.some(t => t.type === 'beginner');
+    if (f === 'This weekend') return ev.date === WEEKEND_SAT || ev.date === WEEKEND_SUN;
+    if (f === 'Coffee stop')  return (ev.tags || []).some(t => t.type === 'coffee');
+    if (f === 'No drop')      return (ev.tags || []).some(t => t.type === 'nodrop');
+    if (f === 'Beginner')     return (ev.tags || []).some(t => t.type === 'beginner');
     return true;
   });
 }
@@ -33,10 +49,10 @@ function matchesSearch(ev, query) {
   if (!query.trim()) return true;
   const q = query.toLowerCase();
   return (
-    ev.title.toLowerCase().includes(q) ||
-    ev.location.toLowerCase().includes(q) ||
-    ev.city.toLowerCase().includes(q) ||
-    ev.organizer.name.toLowerCase().includes(q)
+    (ev.title || '').toLowerCase().includes(q) ||
+    (ev.location || '').toLowerCase().includes(q) ||
+    (ev.city || '').toLowerCase().includes(q) ||
+    (ev.organizer?.name || '').toLowerCase().includes(q)
   );
 }
 
@@ -85,24 +101,20 @@ function EmptyState({ tab, hasFilters }) {
   );
 }
 
-export default function ExploreScreen({ onNavigate, goBack, currentScreen, darkMode, onToggleDark, savedEvents, onToggleSave }) {
+export default function ExploreScreen({ onNavigate, goBack, currentScreen, darkMode, onToggleDark, savedEvents, onToggleSave, user, onSignIn, onSignOut, enrolments }) {
   const [activeTab, setActiveTab] = useState('upcoming');
   const [activeFilters, setActiveFilters] = useState([]);
   const [search, setSearch] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 320);
-    return () => clearTimeout(t);
-  }, []);
+  const { events, loading: isLoading } = useAllEvents();
 
   const toggleFilter = (f) => {
     setActiveFilters(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
   };
 
-  const base = EVENTS.filter(e => {
-    if (activeTab === 'upcoming') return !isPast(e.date);
-    if (activeTab === 'past')     return isPast(e.date);
+  const base = events.filter(e => {
+    if (activeTab === 'upcoming') return !isEventPast(e.date);
+    if (activeTab === 'past')     return isEventPast(e.date);
     if (activeTab === 'saved')    return savedEvents.includes(e.id);
     return true;
   });
@@ -122,7 +134,7 @@ export default function ExploreScreen({ onNavigate, goBack, currentScreen, darkM
 
   return (
     <div className="um-screen">
-      <Nav showBack={true} goBack={goBack} onNavigate={onNavigate} currentScreen={currentScreen} darkMode={darkMode} onToggleDark={onToggleDark} />
+      <Nav showBack={true} goBack={goBack} onNavigate={onNavigate} currentScreen={currentScreen} darkMode={darkMode} onToggleDark={onToggleDark} user={user} onSignIn={onSignIn} onSignOut={onSignOut} />
 
       {/* Search */}
       <div className="um-explore-search">
@@ -190,7 +202,7 @@ export default function ExploreScreen({ onNavigate, goBack, currentScreen, darkM
       {/* Result count */}
       <div className="um-explore-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 11, color: 'var(--um-text-4)' }}>
-          {isLoading ? 'Loading...' : `${filtered.length} session${filtered.length !== 1 ? 's' : ''}`}
+          {isLoading ? 'Loading…' : `${filtered.length} session${filtered.length !== 1 ? 's' : ''}`}
         </span>
       </div>
 
@@ -207,10 +219,10 @@ export default function ExploreScreen({ onNavigate, goBack, currentScreen, darkM
             <div className="um-divider-label">
               <span className="um-divider-label-text">{getDateLabel(date)}</span>
               <span className="um-divider-line" />
-              {(date === '2026-05-03' || date === '2026-05-04') && (
+              {(date === WEEKEND_SAT || date === WEEKEND_SUN) && (
                 <span style={{ fontSize: 10, color: 'var(--um-accent)', fontWeight: 600, whiteSpace: 'nowrap' }}>this weekend</span>
               )}
-              {isPast(date) && (
+              {isEventPast(date) && (
                 <span style={{ fontSize: 10, color: 'var(--um-text-4)', fontWeight: 600, whiteSpace: 'nowrap' }}>past</span>
               )}
             </div>
@@ -232,7 +244,8 @@ export default function ExploreScreen({ onNavigate, goBack, currentScreen, darkM
                   difficulty={ev.difficulty}
                   joining={ev.joining}
                   tags={ev.tags}
-                  completed={isPast(ev.date)}
+                  completed={isEventPast(ev.date)}
+                  enrolled={(enrolments || []).includes(ev.id)}
                   saved={isSaved}
                   onSave={() => onToggleSave(ev.id)}
                   onClick={() => onNavigate('detail', ev.id)}

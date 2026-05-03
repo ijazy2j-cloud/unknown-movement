@@ -1,3 +1,5 @@
+import { useState, useEffect, useRef } from 'react';
+
 function SunIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -22,7 +24,23 @@ function MoonIcon() {
   );
 }
 
-export default function Nav({ showBack, goBack, onNavigate, currentScreen, darkMode, onToggleDark }) {
+export default function Nav({ showBack, goBack, onNavigate, currentScreen, darkMode, onToggleDark, user, onSignIn, onSignOut }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
+
+  const initials = user?.email
+    ? user.email.slice(0, 2).toUpperCase()
+    : '?';
+
   return (
     <nav className="um-nav">
       <div className="um-nav-left">
@@ -57,6 +75,45 @@ export default function Nav({ showBack, goBack, onNavigate, currentScreen, darkM
         >
           {darkMode ? <SunIcon /> : <MoonIcon />}
         </button>
+        {user ? (
+          <div className="um-user-menu-wrap" ref={menuRef}>
+            <button
+              className={`um-user-avatar${menuOpen ? ' open' : ''}`}
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label="User menu"
+            >
+              {initials}
+            </button>
+            {menuOpen && (
+              <div className="um-user-menu">
+                <div className="um-user-menu-email">{user.email}</div>
+                <button
+                  className="um-user-menu-item"
+                  onClick={() => { onNavigate('myevents'); setMenuOpen(false); }}
+                >
+                  My Events
+                </button>
+                <button
+                  className="um-user-menu-item"
+                  onClick={() => { onNavigate('explore'); setMenuOpen(false); }}
+                >
+                  Saved
+                </button>
+                <div className="um-user-menu-sep" />
+                <button
+                  className="um-user-menu-item um-user-menu-signout"
+                  onClick={() => { onSignOut(); setMenuOpen(false); }}
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button className="um-nav-signin" onClick={onSignIn}>
+            Sign in
+          </button>
+        )}
       </div>
     </nav>
   );

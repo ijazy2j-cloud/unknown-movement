@@ -7,7 +7,12 @@
       "Bash(npx vite *)",
       "Bash(Get-ChildItem \"C:\\\\Users\\\\User\\\\projects\\\\unknown-movement\\\\public\" -ErrorAction SilentlyContinue)",
       "Bash(Select-Object Name)",
-      "Bash(Get-ChildItem \"C:\\\\Users\\\\User\\\\projects\\\\unknown-movement\" -Filter \"*.jpg\" -ErrorAction SilentlyContinue)"
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\User\\\\projects\\\\unknown-movement\" -Filter \"*.jpg\" -ErrorAction SilentlyContinue)",
+      "Bash(npm install *)",
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\User\\\\projects\\\\unknown-movement\\\\src\\\\index.css\" | Measure-Object -Line\\).Lines)",
+      "Bash(npm run *)",
+      "Bash(findstr \".env\")",
+      "Bash(git add *)"
     ]
   }
 }
