@@ -53,24 +53,26 @@ export default function HeroSlideshow({ onNavigate }) {
       <div className="um-hero-vignette" />
 
       <div className="um-hero-content">
-        <div className="um-hero-eyebrow">
-          <span className="um-hero-eyebrow-line" aria-hidden="true" />
-          Sri Lanka · May 2026
-          <span className="um-hero-eyebrow-line" aria-hidden="true" />
-        </div>
-        <h1 className="um-hero-title">
-          Find your<br />next<br /><em>ride or run.</em>
-        </h1>
-        <p className="um-hero-sub">
-          Rides, runs, coffee sessions, training groups and endurance events across the island.
-        </p>
-        <div className="um-hero-btns">
-          <button className="um-hero-btn-primary" onClick={() => onNavigate('explore')}>
-            Explore sessions
-          </button>
-          <button className="um-hero-btn-secondary" onClick={() => onNavigate('submit')}>
-            Submit one
-          </button>
+        <div className="um-hero-glass">
+          <div className="um-hero-eyebrow">
+            <span className="um-hero-eyebrow-line" aria-hidden="true" />
+            Sri Lanka · May 2026
+            <span className="um-hero-eyebrow-line" aria-hidden="true" />
+          </div>
+          <h1 className="um-hero-title">
+            Find your<br />next<br /><em>ride or run.</em>
+          </h1>
+          <p className="um-hero-sub">
+            Rides, runs, coffee sessions, training groups and endurance events across the island.
+          </p>
+          <div className="um-hero-btns">
+            <button className="um-hero-btn-primary" onClick={() => onNavigate('explore')}>
+              Explore sessions
+            </button>
+            <button className="um-hero-btn-secondary" onClick={() => onNavigate('submit')}>
+              Submit one
+            </button>
+          </div>
         </div>
       </div>
 

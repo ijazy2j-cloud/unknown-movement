@@ -15,6 +15,11 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-  <!-- Dynamic event pages: regenerate this file as new events are added -->
+  <url>
+    <loc>https://unknownmovement.netlify.app/my-events</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <!-- Dynamic event pages: regenerate this file when new events are added -->
   <!-- e.g. <url><loc>https://unknownmovement.netlify.app/event/colombo-coffee-loop</loc></url> -->
 </urlset>

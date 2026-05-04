@@ -131,16 +131,13 @@ export default function App() {
     if (!user) localStorage.setItem('um-following', JSON.stringify(followedClubs));
   }, [followedClubs, user]);
 
-  // ── URL sync ──────────────────────────────────────────────────────────────
+  // ── URL sync (replaceState keeps the current history entry up-to-date) ──
   useEffect(() => {
-    // Never overwrite the URL while an OAuth callback is in progress.
-    // Supabase reads ?code= / #access_token= asynchronously; stripping them
-    // before that exchange completes prevents the session from being created.
     const isOAuthCallback =
       window.location.search.includes('code=') ||
       window.location.hash.includes('access_token');
     if (isOAuthCallback) {
-      setPageTitle(screen, selectedEventId); // still update the tab title
+      setPageTitle(screen, selectedEventId);
       return;
     }
     const url = screenToUrl(screen, selectedEventId);
@@ -148,9 +145,33 @@ export default function App() {
     setPageTitle(screen, selectedEventId);
   }, [screen, selectedEventId]);
 
+  // ── Popstate: browser back / mobile swipe-back ────────────────────────────
+  useEffect(() => {
+    const handlePopState = (e) => {
+      const s = e.state?.screen;
+      if (s) {
+        setScreen(s);
+        if (e.state.selectedEventId) setSelectedEventId(e.state.selectedEventId);
+        setNavHistory(h => h.slice(0, -1));
+      } else {
+        setScreen('home');
+        setNavHistory([]);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   // ── Navigation ────────────────────────────────────────────────────────────
   const navigate = (to, eventId = null) => {
     if (to === screen && !eventId) return;
+    const newEventId = eventId || selectedEventId;
+    // Push a real browser history entry so the back button/swipe works
+    window.history.pushState(
+      { screen: to, selectedEventId: newEventId },
+      '',
+      screenToUrl(to, newEventId)
+    );
     setNavHistory(h => [...h, screen]);
     setScreen(to);
     if (eventId) setSelectedEventId(eventId);
@@ -158,11 +179,10 @@ export default function App() {
 
   const goBack = () => {
     if (navHistory.length > 0) {
-      const prev = navHistory[navHistory.length - 1];
-      setNavHistory(h => h.slice(0, -1));
-      setScreen(prev);
+      // If there are browser history entries we pushed, use native back
+      window.history.back();
     } else {
-      setScreen('home');
+      navigate('home');
     }
   };
 

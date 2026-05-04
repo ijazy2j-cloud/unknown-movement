@@ -1,9 +1,107 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Badge from '../components/Badge';
 import { supabase } from '../lib/supabase';
 
-const GOOGLE_MAPS_API_KEY = 'YOUR_API_KEY_HERE';
 const TODAY = new Date().toISOString().slice(0, 10);
+
+// ── Nominatim location autocomplete (no API key needed) ──────────────────────
+function LocationAutocomplete({ value, onChange, onSelect }) {
+  const [query, setQuery] = useState(value || '');
+  const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef(null);
+  const containerRef = useRef(null);
+
+  // Sync external value resets (e.g. "Submit another")
+  useEffect(() => { if (!value) { setQuery(''); setSuggestions([]); setOpen(false); } }, [value]);
+
+  const search = useCallback(async (q) => {
+    if (q.length < 3) { setSuggestions([]); setOpen(false); return; }
+    setLoading(true);
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&accept-language=en`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+      const data = await res.json();
+      setSuggestions(data);
+      setOpen(data.length > 0);
+    } catch {
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    const q = e.target.value;
+    setQuery(q);
+    onChange(q);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => search(q), 400);
+  };
+
+  const handleSelect = (item) => {
+    const name = item.display_name;
+    setQuery(name);
+    setSuggestions([]);
+    setOpen(false);
+    onSelect(name, { lat: parseFloat(item.lat), lng: parseFloat(item.lon) });
+  };
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e) => { if (!containerRef.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return () => { document.removeEventListener('mousedown', handler); document.removeEventListener('touchstart', handler); };
+  }, []);
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }}>
+        <input
+          className="um-input"
+          placeholder="e.g. Independence Square, Colombo 7"
+          value={query}
+          onChange={handleChange}
+          onFocus={() => suggestions.length > 0 && setOpen(true)}
+          autoComplete="off"
+        />
+        {loading && (
+          <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--um-text-4)', fontSize: 11 }}>
+            Searching…
+          </span>
+        )}
+      </div>
+      {open && suggestions.length > 0 && (
+        <div className="um-nominatim-dropdown">
+          {suggestions.map((item, i) => {
+            const parts = item.display_name.split(', ');
+            const main = parts.slice(0, 2).join(', ');
+            const sub = parts.slice(2).join(', ');
+            return (
+              <button
+                key={i}
+                className="um-nominatim-item"
+                onMouseDown={e => { e.preventDefault(); handleSelect(item); }}
+                onTouchEnd={e => { e.preventDefault(); handleSelect(item); }}
+                type="button"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--um-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>
+                  <span style={{ display: 'block', fontWeight: 500, color: 'var(--um-text)' }}>{main}</span>
+                  {sub && <span style={{ display: 'block', fontSize: 11, color: 'var(--um-text-4)', marginTop: 1 }}>{sub}</span>}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function SunIcon() {
   return (
@@ -80,9 +178,6 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
   const [visibility, setVisibility] = useState('public');
   const [attendeeVis, setAttendeeVis] = useState('count_only');
 
-  const locationInputRef = useRef(null);
-  const autocompleteRef = useRef(null);
-
   // Pre-fill when editing
   useEffect(() => {
     if (!editEventId || !supabase) return;
@@ -117,36 +212,6 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
       });
   }, [editEventId]);
 
-  useEffect(() => {
-    if (step !== 1 || GOOGLE_MAPS_API_KEY === 'YOUR_API_KEY_HERE') return;
-    if (autocompleteRef.current) return;
-
-    function initAutocomplete() {
-      if (autocompleteRef.current || !locationInputRef.current) return;
-      if (!window.google?.maps?.places) return;
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(
-        locationInputRef.current,
-        { fields: ['formatted_address', 'geometry', 'name'] }
-      );
-      autocompleteRef.current.addListener('place_changed', () => {
-        const place = autocompleteRef.current.getPlace();
-        if (place?.geometry) {
-          setStartLocation(place.formatted_address || place.name || '');
-          setStartCoords({ lat: place.geometry.location.lat(), lng: place.geometry.location.lng() });
-        }
-      });
-    }
-
-    if (window.google?.maps?.places) { initAutocomplete(); return; }
-    if (!document.querySelector('script[data-um-maps]')) {
-      const script = document.createElement('script');
-      script.setAttribute('data-um-maps', 'true');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-      script.async = true;
-      script.addEventListener('load', initAutocomplete);
-      document.head.appendChild(script);
-    }
-  }, [step]);
 
   const handleFlyerUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -256,7 +321,6 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
     setOrganiserName(''); setWhatsapp(''); setStravaLink('');
     setVisibility('public'); setAttendeeVis('count_only');
     setSubmitted(false); setSubmitError('');
-    autocompleteRef.current = null;
     if (onClearEdit) onClearEdit();
   }
 
@@ -507,12 +571,10 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
 
           <div className="um-field">
             <label className="um-field-label">Start location</label>
-            <input
-              ref={locationInputRef}
-              className="um-input"
-              placeholder="e.g. Independence Square, Colombo 7"
+            <LocationAutocomplete
               value={startLocation}
-              onChange={e => { setStartLocation(e.target.value); if (startCoords) setStartCoords(null); }}
+              onChange={v => { setStartLocation(v); if (startCoords) setStartCoords(null); }}
+              onSelect={(name, coords) => { setStartLocation(name); setStartCoords(coords); }}
             />
             {startCoords && (
               <div style={{ fontSize: 11, color: 'var(--um-accent)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -536,6 +598,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
               </div>
             </div>
           )}
+          {submitError && <div className="um-form-error">{submitError}</div>}
         </div>
       )}
 
@@ -559,6 +622,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
             <label className="um-field-label">Route link</label>
             <input className="um-input" placeholder="Strava, Komoot, or Google Maps (optional)" value={routeLink} onChange={e => setRouteLink(e.target.value)} />
           </div>
+          {submitError && <div className="um-form-error">{submitError}</div>}
           <div style={{ borderTop: '1px solid var(--um-border-lt)', paddingTop: 6 }}>
             <div className="um-field-label" style={{ marginBottom: 4 }}>Tags</div>
             <p style={{ fontSize: 12, color: 'var(--um-text-4)', marginBottom: 14 }}>Helps athletes find and assess your {isOfficialEvent ? 'event' : 'session'}.</p>
@@ -635,7 +699,13 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
             style={{ flex: 2 }}
             onClick={() => {
               if (step === 1) {
-                const err = !title.trim() ? 'Please enter a title.' : date < TODAY ? 'Date must be in the future.' : null;
+                const err = !title.trim()
+                  ? 'Please enter a title.'
+                  : date < TODAY
+                  ? 'Date must be today or in the future.'
+                  : !startLocation.trim()
+                  ? 'Please enter a start location.'
+                  : null;
                 if (err) { setSubmitError(err); return; }
                 setSubmitError('');
               }
