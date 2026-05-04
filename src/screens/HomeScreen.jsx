@@ -356,7 +356,7 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
                   style={{ transitionDelay: featuredIn ? `${i * 0.12}s` : '0s' }}
                   onClick={() => onNavigate('detail', ev.id)}
                 >
-                  <img src={ev.image} alt={ev.title} className="um-featured-card-img" loading="lazy" />
+                  <img src={ev.image} alt={`${ev.type === 'ride' ? 'Cycling group ride' : 'Running group'} — ${ev.title} in Sri Lanka`} className="um-featured-card-img" loading="lazy" />
                   <div className="um-featured-card-overlay" />
                   <button
                     className={`um-featured-card-save${isSaved ? ' saved' : ''}`}
@@ -501,8 +501,40 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
         </div>
       </div>
 
+      {/* ── Sri Lanka's home section (SEO editorial content) ─────────────────── */}
+      <section aria-label="About Unknown Movement" style={{ padding: '32px 16px 24px', borderTop: '1px solid var(--um-border-lt)' }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--um-text)', letterSpacing: '-0.03em', marginBottom: 16, lineHeight: 1.2 }}>
+          Sri Lanka's home for group rides and runs
+        </h2>
+        <p style={{ fontSize: 14, color: 'var(--um-text-3)', lineHeight: 1.75, marginBottom: 14 }}>
+          Unknown Movement is the central hub for cyclists and runners across Sri Lanka.
+          Whether you're looking for a morning group ride in Colombo, a weekend trail run in the hills
+          above Kandy, or a coffee-stop loop through Galle, you'll find your community here.
+          Athletes from Negombo to Matara use this platform to discover training partners, join local
+          clubs, and stay connected with the island's growing endurance scene.
+        </p>
+        <p style={{ fontSize: 14, color: 'var(--um-text-3)', lineHeight: 1.75, marginBottom: 14 }}>
+          From beginner-friendly running groups in Colombo to competitive cycling sportives and
+          marathon training programmes, the island's athletic calendar is more active than ever.
+          Sri Lanka's roads and trails offer incredible variety — coastal routes in Negombo and
+          Galle, mountain passes near Kandy and Nuwara Eliya, and the vibrant urban cycling scene
+          growing out of Colombo 3, 5, and 7.
+        </p>
+        <p style={{ fontSize: 14, color: 'var(--um-text-3)', lineHeight: 1.75 }}>
+          Submit your own session in under two minutes, or{' '}
+          <button
+            onClick={() => onNavigate('explore')}
+            style={{ color: 'var(--um-accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 600, padding: 0, textDecoration: 'underline' }}
+          >
+            explore all upcoming events
+          </button>
+          {' '}to find a ride or run that fits your level. All sessions are free to join and open to
+          everyone — from first-time joggers to seasoned triathletes.
+        </p>
+      </section>
+
       {/* ── FAQ ──────────────────────────────────────────────────────────────── */}
-      <div className="um-section-label" style={{ margin: '28px 0 4px' }}>
+      <div className="um-section-label" style={{ margin: '4px 0 4px' }}>
         <h2 className="um-section-title">Common questions</h2>
       </div>
       <FAQ />
