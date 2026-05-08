@@ -72,8 +72,16 @@ export default function Footer({ onNavigate }) {
         <div className="um-footer-rule" />
 
         <p className="um-footer-credit">
-          Cooked by{' '}
-          <span className="um-footer-credit-brand">Core Craft Agency</span>
+          Crafted by{' '}
+          <a
+            href="https://corecraft.agency"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="um-footer-credit-brand"
+            style={{ textDecoration: 'none' }}
+          >
+            Core Craft Agency
+          </a>
         </p>
 
       </div>
