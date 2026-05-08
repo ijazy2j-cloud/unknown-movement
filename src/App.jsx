@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
+import { useIsAdmin } from './lib/useIsAdmin';
 import HomeScreen from './screens/HomeScreen';
 import ExploreScreen from './screens/ExploreScreen';
 import DetailScreen from './screens/DetailScreen';
 import SubmitScreen from './screens/SubmitScreen';
 import MyEventsScreen from './screens/MyEventsScreen';
 import AttendeesScreen from './screens/AttendeesScreen';
+import AdminScreen from './screens/AdminScreen';
 import AuthModal from './components/AuthModal';
 
 // ── URL ↔ screen mapping ─────────────────────────────────────────────────────
@@ -14,6 +16,7 @@ function urlToScreen(pathname) {
   if (pathname === '/explore')   return { screen: 'explore',  eventId: null };
   if (pathname === '/submit')    return { screen: 'submit',   eventId: null };
   if (pathname === '/my-events') return { screen: 'myevents', eventId: null };
+  if (pathname === '/admin')     return { screen: 'admin',    eventId: null };
   const m = pathname.match(/^\/event\/(.+)$/);
   if (m) return { screen: 'detail', eventId: decodeURIComponent(m[1]) };
   return { screen: 'home', eventId: null };
@@ -24,6 +27,7 @@ function screenToUrl(screen, selectedEventId) {
   if (screen === 'explore')   return '/explore';
   if (screen === 'submit')    return '/submit';
   if (screen === 'myevents')  return '/my-events';
+  if (screen === 'admin')     return '/admin';
   if (screen === 'detail' && selectedEventId) return `/event/${encodeURIComponent(selectedEventId)}`;
   return '/';
 }
@@ -37,6 +41,7 @@ function setPageTitle(screen, selectedEventId) {
     submit:    `Submit a Session | ${base}`,
     myevents:  `My Events | ${base}`,
     attendees: `Attendees | ${base}`,
+    admin:     `Admin Panel | ${base}`,
   };
   document.title = titles[screen] || titles.home;
 }
@@ -71,6 +76,7 @@ export default function App() {
   });
 
   const [enrolments, setEnrolments] = useState([]);
+  const { isAdmin } = useIsAdmin(user);
 
   // ── Supabase auth ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -268,6 +274,7 @@ export default function App() {
     onSignOut: handleSignOut,
     enrolments,
     onToggleEnrol: toggleEnrol,
+    isAdmin,
   };
 
   return (
@@ -278,6 +285,7 @@ export default function App() {
       {screen === 'submit'     && <SubmitScreen   {...sharedProps} editEventId={editEventId} onClearEdit={() => setEditEventId(null)} />}
       {screen === 'myevents'   && <MyEventsScreen {...sharedProps} onOpenAttendees={openAttendees} onEditEvent={openEditEvent} />}
       {screen === 'attendees'  && <AttendeesScreen {...sharedProps} attendeesEventId={attendeesEventId} />}
+      {screen === 'admin'      && <AdminScreen {...sharedProps} />}
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} onSuccess={() => setAuthOpen(false)} />}
     </>
   );

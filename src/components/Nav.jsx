@@ -24,7 +24,7 @@ function MoonIcon() {
   );
 }
 
-export default function Nav({ showBack, goBack, onNavigate, currentScreen, darkMode, onToggleDark, user, onSignIn, onSignOut }) {
+export default function Nav({ showBack, goBack, onNavigate, currentScreen, darkMode, onToggleDark, user, onSignIn, onSignOut, isAdmin }) {
   const [menuOpen,   setMenuOpen]   = useState(false); // user avatar dropdown
   const [mobileOpen, setMobileOpen] = useState(false); // hamburger menu
   const userMenuRef = useRef(null);
@@ -127,6 +127,15 @@ export default function Nav({ showBack, goBack, onNavigate, currentScreen, darkM
                   <div className="um-user-menu-email">{user.email}</div>
                   <button className="um-user-menu-item" onClick={() => go('myevents')}>My Events</button>
                   <button className="um-user-menu-item" onClick={() => go('explore')}>Saved</button>
+                  {isAdmin && (
+                    <>
+                      <div className="um-user-menu-sep" />
+                      <button className="um-user-menu-item um-user-menu-admin" onClick={() => go('admin')}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 7, flexShrink: 0 }}><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        Admin Panel
+                      </button>
+                    </>
+                  )}
                   <div className="um-user-menu-sep" />
                   <button
                     className="um-user-menu-item um-user-menu-signout"
