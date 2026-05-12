@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Badge from '../components/Badge';
 import { supabase } from '../lib/supabase';
+import { useUserClubs } from '../lib/useClubs';
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
@@ -177,6 +178,10 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
   const [stravaLink, setStravaLink] = useState('');
   const [visibility, setVisibility] = useState('public');
   const [attendeeVis, setAttendeeVis] = useState('count_only');
+  const [hostingClubId, setHostingClubId] = useState('');
+  const [isMembersOnly, setIsMembersOnly] = useState(false);
+
+  const { clubs: userClubs } = useUserClubs(user?.id);
 
   // Pre-fill when editing
   useEffect(() => {
@@ -204,6 +209,8 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
         setOrganiserName(data.organiser_name || '');
         setWhatsapp(data.whatsapp_contact || '');
         setVisibility(data.visibility || 'public');
+        setHostingClubId(data.hosting_club_id || '');
+        setIsMembersOnly(!!data.is_members_only);
         const tags = data.tags || [];
         setCoffee(tags.some(t => t.type === 'coffee'));
         setNodrop(tags.some(t => t.type === 'nodrop'));
@@ -296,6 +303,9 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
       registration_deadline:registrationDeadline || null,
       entry_fee:            entryFee.trim() || null,
       event_website:        eventWebsite.trim() || null,
+      // Club fields
+      hosting_club_id:      hostingClubId || null,
+      is_members_only:      isMembersOnly,
     };
 
     let error;
@@ -320,6 +330,7 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
     setCoffee(true); setNodrop(true); setBeginner(false); setTourist(false);
     setOrganiserName(''); setWhatsapp(''); setStravaLink('');
     setVisibility('public'); setAttendeeVis('count_only');
+    setHostingClubId(''); setIsMembersOnly(false);
     setSubmitted(false); setSubmitError('');
     if (onClearEdit) onClearEdit();
   }
@@ -685,6 +696,29 @@ export default function SubmitScreen({ onNavigate, goBack, currentScreen, darkMo
               <option value="hidden">Hide attendee info</option>
             </select>
           </div>
+          {userClubs.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--um-border-lt)', paddingTop: 6 }}>
+              <div className="um-field-label" style={{ marginBottom: 14 }}>Club hosting</div>
+              <div className="um-field">
+                <label className="um-field-label">Hosted by club</label>
+                <select className="um-select" value={hostingClubId} onChange={e => { setHostingClubId(e.target.value); if (!e.target.value) setIsMembersOnly(false); }}>
+                  <option value="">None (personal session)</option>
+                  {userClubs.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              {hostingClubId && (
+                <div className="um-toggle-row">
+                  <div>
+                    <div className="um-toggle-name">Members only</div>
+                    <div className="um-toggle-desc">Restrict this session to club members</div>
+                  </div>
+                  <button className={`um-toggle ${isMembersOnly ? 'on' : 'off'}`} onClick={() => setIsMembersOnly(v => !v)} />
+                </div>
+              )}
+            </div>
+          )}
           {submitError && <div className="um-form-error" style={{ marginTop: 8 }}>{submitError}</div>}
         </div>
       )}

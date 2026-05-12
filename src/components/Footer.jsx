@@ -66,6 +66,9 @@ export default function Footer({ onNavigate }) {
             <button className="um-footer-nav-link" onClick={() => onNavigate('submit')}>
               Submit a ride
             </button>
+            <button className="um-footer-nav-link" onClick={() => onNavigate('createclub')}>
+              Start a club
+            </button>
           </nav>
         </div>
 

@@ -788,7 +788,7 @@ function ClubsTab({ user: adminUser, addToast }) {
       if (!supabase) return;
       const { data } = await supabase
         .from('clubs')
-        .select('id, name, owner_id, created_at, featured, logo_url, profiles(full_name, email)')
+        .select('id, name, owner_id, created_at, featured, is_verified, logo_url, profiles(full_name, email)')
         .order('created_at', { ascending: false })
         .limit(200);
       setClubs(data || []);
@@ -804,6 +804,15 @@ function ClubsTab({ user: adminUser, addToast }) {
     await logAdminAction(adminUser.id, club.featured ? 'UNFEATURE_CLUB' : 'FEATURE_CLUB', 'club', club.id, { name: club.name });
     addToast(`Club ${club.featured ? 'unfeatured' : 'featured'}.`, 'success');
     setClubs(c => c.map(x => x.id === club.id ? { ...x, featured: !club.featured } : x));
+  }
+
+  async function toggleVerified(club) {
+    if (!supabase) return;
+    const { error } = await supabase.from('clubs').update({ is_verified: !club.is_verified }).eq('id', club.id);
+    if (error) { addToast('Failed: ' + error.message, 'error'); return; }
+    await logAdminAction(adminUser.id, club.is_verified ? 'UNVERIFY_CLUB' : 'VERIFY_CLUB', 'club', club.id, { name: club.name });
+    addToast(`Club ${club.is_verified ? 'unverified' : 'verified'}.`, 'success');
+    setClubs(c => c.map(x => x.id === club.id ? { ...x, is_verified: !club.is_verified } : x));
   }
 
   async function deleteClub(club) {
@@ -826,7 +835,7 @@ function ClubsTab({ user: adminUser, addToast }) {
         <div className="um-admin-table-wrap">
           {loading ? <div className="um-admin-empty">Loading clubs…</div> : clubs.length === 0 ? <div className="um-admin-empty">No clubs yet.</div> : (
             <table className="um-admin-table">
-              <thead><tr><th>Name</th><th>Owner</th><th>Created</th><th>Featured</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Name</th><th>Owner</th><th>Created</th><th>Featured</th><th>Verified</th><th>Actions</th></tr></thead>
               <tbody>
                 {clubs.map(c => (
                   <tr key={c.id}>
@@ -834,9 +843,11 @@ function ClubsTab({ user: adminUser, addToast }) {
                     <td style={{ fontSize: 11 }}>{c.profiles?.full_name || c.profiles?.email || c.owner_id?.slice(0, 8)}</td>
                     <td>{fmtDate(c.created_at)}</td>
                     <td>{c.featured ? <span className="um-admin-status um-admin-status-upcoming">Featured</span> : '—'}</td>
+                    <td>{c.is_verified ? <span className="um-admin-status um-admin-status-completed">Verified</span> : '—'}</td>
                     <td>
                       <div className="um-admin-table-actions">
                         <button className="um-admin-btn um-admin-btn-accent" onClick={() => toggleFeatured(c)}>{c.featured ? 'Unfeature' : 'Feature'}</button>
+                        <button className="um-admin-btn um-admin-btn-accent" onClick={() => toggleVerified(c)}>{c.is_verified ? 'Unverify' : 'Verify'}</button>
                         <button className="um-admin-btn um-admin-btn-danger" onClick={() => setConfirm({ title: 'Delete club', message: `Delete "${c.name}" permanently?`, onConfirm: () => deleteClub(c) })}>Delete</button>
                       </div>
                     </td>

@@ -86,6 +86,12 @@ export default function Nav({ showBack, goBack, onNavigate, currentScreen, darkM
               Explore
             </button>
             <button
+              className={`um-nav-link${currentScreen === 'clubs' ? ' active' : ''}`}
+              onClick={() => onNavigate('clubs')}
+            >
+              Clubs
+            </button>
+            <button
               className={`um-nav-cta${currentScreen === 'submit' ? ' active' : ''}`}
               onClick={() => onNavigate('submit')}
             >
@@ -176,6 +182,15 @@ export default function Nav({ showBack, goBack, onNavigate, currentScreen, darkM
                 <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
               </svg>
               Explore
+            </button>
+            <button
+              className={`um-mobile-menu-item${currentScreen === 'clubs' ? ' active' : ''}`}
+              onClick={() => go('clubs')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              </svg>
+              Clubs
             </button>
             <button
               className={`um-mobile-menu-item${currentScreen === 'submit' ? ' active' : ''}`}
