@@ -4,7 +4,9 @@ import Badge from '../components/Badge';
 import SessionRow from '../components/SessionRow';
 import HeroSlideshow from '../components/HeroSlideshow';
 import Footer from '../components/Footer';
+import PhotoReel from '../components/PhotoReel';
 import { useAllEvents } from '../lib/useEvents';
+import { useStats } from '../lib/useStats';
 
 const TODAY = new Date().toISOString().slice(0, 10);
 function isEventPast(d) { return d < TODAY; }
@@ -40,7 +42,7 @@ const weekLabel = (() => {
   return `Sat–Sun ${d1}–${d2} ${MONTHS[parseInt(WEEKEND_SAT.split('-')[1], 10) - 1]}`;
 })();
 
-const STAT_TARGETS = { week: 24, weekend: 8, clubs: 6, cities: 3 };
+// STAT_TARGETS replaced by live useStats hook — see HomeScreen component
 
 // ── FAQ data (also used for JSON-LD schema) ───────────────────────────────────
 const FAQS = [
@@ -185,15 +187,61 @@ function FAQ() {
   );
 }
 
+// ── Active clubs preview (fetches top 3 verified clubs) ──────────────────────
+function ActiveClubsPreview({ onNavigate }) {
+  const [clubs, setClubs] = useState([]);
+  useEffect(() => {
+    if (!window._supabaseClubs) {
+      import('../lib/supabase').then(({ supabase }) => {
+        if (!supabase) return;
+        supabase.from('clubs').select('id,name,slug,city,logo_url,club_members(count)').eq('is_verified', true).order('name').limit(3).then(({ data }) => {
+          setClubs((data || []).map(c => ({ ...c, memberCount: c.club_members?.[0]?.count ?? 0 })));
+        });
+      });
+    }
+  }, []);
+
+  if (clubs.length === 0) return (
+    <>
+      {[{initials:'CC',name:'Colombo Cycling Club',meta:'Colombo · cycling',type:'ride'},{initials:'SR',name:'Sri Lanka Runners',meta:'Island-wide · running',type:'run'}].map(c => (
+        <div key={c.name} className="um-club-row" onClick={() => onNavigate('clubs')}>
+          <div className="um-club-mark">{c.initials}</div>
+          <div style={{ flex:1 }}><div className="um-club-name">{c.name}</div><div className="um-club-meta">{c.meta}</div></div>
+          <Badge type={c.type}>{c.type.charAt(0).toUpperCase()+c.type.slice(1)}</Badge>
+        </div>
+      ))}
+    </>
+  );
+
+  return (
+    <>
+      {clubs.map(c => (
+        <div key={c.id} className="um-club-row" onClick={() => onNavigate('clubdetail', null, c.slug || c.id)}>
+          <div className="um-club-mark" style={{ overflow:'hidden', padding: c.logo_url ? 0 : undefined }}>
+            {c.logo_url ? <img src={c.logo_url} alt={c.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : c.name?.slice(0,2).toUpperCase()}
+          </div>
+          <div style={{ flex:1 }}>
+            <div className="um-club-name">{c.name}</div>
+            <div className="um-club-meta">{[c.city, `${c.memberCount} members`].filter(Boolean).join(' · ')}</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--um-text-4)" strokeWidth="1.8" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      ))}
+    </>
+  );
+}
+
 // ── Main screen ────────────────────────────────────────────────────────────────
-export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode, onToggleDark, savedEvents, onToggleSave, user, enrolments, onSignIn, onSignOut }) {
+export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode, onToggleDark, savedEvents, onToggleSave, user, enrolments, onSignIn, onSignOut, isAdmin }) {
   const { events } = useAllEvents();
+  const { stats, loaded: statsLoaded } = useStats();
   const featuredRef   = useRef(null);
   const officialRef   = useRef(null);
   const statsRef      = useRef(null);
   const [featuredIn, setFeaturedIn]   = useState(false);
   const [officialIn, setOfficialIn]   = useState(false);
   const [counts, setCounts] = useState({ week: 0, weekend: 0, clubs: 0, cities: 0 });
+  const statsAnimated = useRef(false);
 
   useEffect(() => {
     const el = featuredRef.current;
@@ -209,29 +257,33 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
     io.observe(el); return () => io.disconnect();
   }, []);
 
+  // Animate stats once both the element is visible AND data is loaded
   useEffect(() => {
+    if (!statsLoaded || statsAnimated.current) return;
     const el = statsRef.current;
     if (!el) return;
+    const targets = { week: stats.weekEvents, weekend: stats.weekendEvents, clubs: stats.clubs, cities: stats.cities };
     const io = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting) return;
       io.disconnect();
+      statsAnimated.current = true;
       let step = 0;
       const steps = 28;
       const timer = setInterval(() => {
         step++;
         const p = 1 - Math.pow(1 - step / steps, 2);
         setCounts({
-          week:    Math.round(STAT_TARGETS.week    * p),
-          weekend: Math.round(STAT_TARGETS.weekend * p),
-          clubs:   Math.round(STAT_TARGETS.clubs   * p),
-          cities:  Math.round(STAT_TARGETS.cities  * p),
+          week:    Math.round(targets.week    * p),
+          weekend: Math.round(targets.weekend * p),
+          clubs:   Math.round(targets.clubs   * p),
+          cities:  Math.round(targets.cities  * p),
         });
-        if (step >= steps) { clearInterval(timer); setCounts(STAT_TARGETS); }
+        if (step >= steps) { clearInterval(timer); setCounts(targets); }
       }, 40);
     }, { threshold: 0.6 });
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [statsLoaded, stats]);
 
   const upcomingAll      = events.filter(e => !isEventPast(e.date));
   const officialEvents   = upcomingAll.filter(e => e.is_official_event);
@@ -253,6 +305,9 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
       <Nav onNavigate={onNavigate} currentScreen={currentScreen} darkMode={darkMode} onToggleDark={onToggleDark} user={user} onSignIn={onSignIn} onSignOut={onSignOut} />
 
       <HeroSlideshow onNavigate={onNavigate} />
+
+      {/* Community photo reel */}
+      <PhotoReel onNavigate={onNavigate} />
 
       {/* Your upcoming sessions */}
       {user && upcomingEnrolled.length > 0 && (
@@ -292,7 +347,7 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
         </div>
       )}
 
-      {/* Stats strip */}
+      {/* Stats strip — live counts from DB with 5-min cache */}
       <div className="um-stats-strip" ref={statsRef}>
         <div className="um-stat">
           <span className="um-stat-num">{counts.week}</span>
@@ -306,12 +361,13 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
           <span className="um-stat-num">{counts.clubs}</span>
           <span className="um-stat-lbl">Clubs</span>
         </div>
-        <div className="um-stat">
+        <div className="um-stat" style={{ borderRight: 'none' }}>
           <span className="um-stat-num">{counts.cities}</span>
           <span className="um-stat-lbl">Cities</span>
         </div>
         <div className="um-live-dot-wrap">
-          <span className="um-live-dot" />
+          <span className="um-live-dot" aria-hidden="true" />
+          <span className="um-live-label">Live</span>
         </div>
       </div>
 
@@ -459,27 +515,12 @@ export default function HomeScreen({ onNavigate, goBack, currentScreen, darkMode
         </div>
       </div>
 
-      {/* Active clubs */}
+      {/* Active clubs — links to real club directory */}
       <div className="um-section-label" style={{ margin: '22px 0 0' }}>
         <span className="um-section-title">Active clubs</span>
-        <button className="um-section-link">See all</button>
+        <button className="um-section-link" onClick={() => onNavigate('clubs')}>See all →</button>
       </div>
-      <div className="um-club-row">
-        <div className="um-club-mark">CC</div>
-        <div style={{ flex: 1 }}>
-          <div className="um-club-name">Colombo Cycling Club</div>
-          <div className="um-club-meta">Colombo · 140 members · 3× weekly</div>
-        </div>
-        <Badge type="ride">Ride</Badge>
-      </div>
-      <div className="um-club-row">
-        <div className="um-club-mark" style={{ background: 'oklch(36% 0.09 220)', color: 'white' }}>SR</div>
-        <div style={{ flex: 1 }}>
-          <div className="um-club-name">Sri Lanka Runners</div>
-          <div className="um-club-meta">Island-wide · 220 members · 5× weekly</div>
-        </div>
-        <Badge type="run">Run</Badge>
-      </div>
+      <ActiveClubsPreview onNavigate={onNavigate} />
 
       {/* Submit CTA */}
       <div className="um-submit-cta-block">

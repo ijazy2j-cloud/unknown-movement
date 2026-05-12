@@ -8,6 +8,10 @@ import SubmitScreen from './screens/SubmitScreen';
 import MyEventsScreen from './screens/MyEventsScreen';
 import AttendeesScreen from './screens/AttendeesScreen';
 import AdminScreen from './screens/AdminScreen';
+import ClubsScreen from './screens/ClubsScreen';
+import ClubDetailScreen from './screens/ClubDetailScreen';
+import ClubManageScreen from './screens/ClubManageScreen';
+import CreateClubScreen from './screens/CreateClubScreen';
 import AuthModal from './components/AuthModal';
 
 // ── URL ↔ screen mapping ─────────────────────────────────────────────────────
@@ -16,18 +20,28 @@ function urlToScreen(pathname) {
   if (pathname === '/explore')   return { screen: 'explore',  eventId: null };
   if (pathname === '/submit')    return { screen: 'submit',   eventId: null };
   if (pathname === '/my-events') return { screen: 'myevents', eventId: null };
-  if (pathname === '/admin')     return { screen: 'admin',    eventId: null };
+  if (pathname === '/admin')       return { screen: 'admin',      eventId: null, clubSlug: null };
+  if (pathname === '/clubs')       return { screen: 'clubs',      eventId: null, clubSlug: null };
+  if (pathname === '/clubs/create')return { screen: 'createclub', eventId: null, clubSlug: null };
+  const clubManage = pathname.match(/^\/clubs\/([^/]+)\/manage$/);
+  if (clubManage) return { screen: 'clubmanage', eventId: null, clubSlug: decodeURIComponent(clubManage[1]) };
+  const clubDetail = pathname.match(/^\/clubs\/([^/]+)$/);
+  if (clubDetail) return { screen: 'clubdetail', eventId: null, clubSlug: decodeURIComponent(clubDetail[1]) };
   const m = pathname.match(/^\/event\/(.+)$/);
   if (m) return { screen: 'detail', eventId: decodeURIComponent(m[1]) };
   return { screen: 'home', eventId: null };
 }
 
-function screenToUrl(screen, selectedEventId) {
+function screenToUrl(screen, selectedEventId, selectedClubSlug) {
   if (screen === 'home')      return '/';
   if (screen === 'explore')   return '/explore';
   if (screen === 'submit')    return '/submit';
   if (screen === 'myevents')  return '/my-events';
-  if (screen === 'admin')     return '/admin';
+  if (screen === 'admin')       return '/admin';
+  if (screen === 'clubs')       return '/clubs';
+  if (screen === 'createclub')  return '/clubs/create';
+  if (screen === 'clubdetail' && selectedClubSlug) return `/clubs/${encodeURIComponent(selectedClubSlug)}`;
+  if (screen === 'clubmanage' && selectedClubSlug) return `/clubs/${encodeURIComponent(selectedClubSlug)}/manage`;
   if (screen === 'detail' && selectedEventId) return `/event/${encodeURIComponent(selectedEventId)}`;
   return '/';
 }
@@ -41,7 +55,11 @@ function setPageTitle(screen, selectedEventId) {
     submit:    `Submit a Session | ${base}`,
     myevents:  `My Events | ${base}`,
     attendees: `Attendees | ${base}`,
-    admin:     `Admin Panel | ${base}`,
+    admin:      `Admin Panel | ${base}`,
+    clubs:      `Clubs | ${base}`,
+    clubdetail: `Club | ${base}`,
+    createclub: `Start a Club | ${base}`,
+    clubmanage: `Manage Club | ${base}`,
   };
   document.title = titles[screen] || titles.home;
 }
@@ -77,6 +95,7 @@ export default function App() {
 
   const [enrolments, setEnrolments] = useState([]);
   const { isAdmin } = useIsAdmin(user);
+  const [selectedClubSlug, setSelectedClubSlug] = useState(initial.clubSlug || null);
 
   // ── Supabase auth ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -137,19 +156,16 @@ export default function App() {
     if (!user) localStorage.setItem('um-following', JSON.stringify(followedClubs));
   }, [followedClubs, user]);
 
-  // ── URL sync (replaceState keeps the current history entry up-to-date) ──
+  // ── URL sync ─────────────────────────────────────────────────────────────
   useEffect(() => {
     const isOAuthCallback =
       window.location.search.includes('code=') ||
       window.location.hash.includes('access_token');
-    if (isOAuthCallback) {
-      setPageTitle(screen, selectedEventId);
-      return;
-    }
-    const url = screenToUrl(screen, selectedEventId);
-    window.history.replaceState({ screen, selectedEventId }, '', url);
+    if (isOAuthCallback) { setPageTitle(screen, selectedEventId); return; }
+    const url = screenToUrl(screen, selectedEventId, selectedClubSlug);
+    window.history.replaceState({ screen, selectedEventId, selectedClubSlug }, '', url);
     setPageTitle(screen, selectedEventId);
-  }, [screen, selectedEventId]);
+  }, [screen, selectedEventId, selectedClubSlug]);
 
   // ── Popstate: browser back / mobile swipe-back ────────────────────────────
   useEffect(() => {
@@ -158,6 +174,7 @@ export default function App() {
       if (s) {
         setScreen(s);
         if (e.state.selectedEventId) setSelectedEventId(e.state.selectedEventId);
+        if (e.state.selectedClubSlug !== undefined) setSelectedClubSlug(e.state.selectedClubSlug);
         setNavHistory(h => h.slice(0, -1));
       } else {
         setScreen('home');
@@ -168,28 +185,25 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // ── Navigation ────────────────────────────────────────────────────────────
-  const navigate = (to, eventId = null) => {
-    if (to === screen && !eventId) return;
+  // ── Navigation ─────────────────────────────────────────────────────────────
+  const navigate = (to, eventId = null, clubSlug = null) => {
+    if (to === screen && !eventId && !clubSlug) return;
     const newEventId = eventId || selectedEventId;
-    // Push a real browser history entry so the back button/swipe works
+    const newClubSlug = clubSlug || selectedClubSlug;
     window.history.pushState(
-      { screen: to, selectedEventId: newEventId },
+      { screen: to, selectedEventId: newEventId, selectedClubSlug: newClubSlug },
       '',
-      screenToUrl(to, newEventId)
+      screenToUrl(to, newEventId, newClubSlug)
     );
     setNavHistory(h => [...h, screen]);
     setScreen(to);
     if (eventId) setSelectedEventId(eventId);
+    if (clubSlug) setSelectedClubSlug(clubSlug);
   };
 
   const goBack = () => {
-    if (navHistory.length > 0) {
-      // If there are browser history entries we pushed, use native back
-      window.history.back();
-    } else {
-      navigate('home');
-    }
+    if (navHistory.length > 0) { window.history.back(); }
+    else { navigate('home'); }
   };
 
   const requireAuth = (action) => {
@@ -275,6 +289,7 @@ export default function App() {
     enrolments,
     onToggleEnrol: toggleEnrol,
     isAdmin,
+    selectedClubSlug,
   };
 
   return (
@@ -286,6 +301,10 @@ export default function App() {
       {screen === 'myevents'   && <MyEventsScreen {...sharedProps} onOpenAttendees={openAttendees} onEditEvent={openEditEvent} />}
       {screen === 'attendees'  && <AttendeesScreen {...sharedProps} attendeesEventId={attendeesEventId} />}
       {screen === 'admin'      && <AdminScreen {...sharedProps} />}
+      {screen === 'clubs'      && <ClubsScreen {...sharedProps} />}
+      {screen === 'clubdetail' && <ClubDetailScreen {...sharedProps} />}
+      {screen === 'clubmanage' && <ClubManageScreen {...sharedProps} />}
+      {screen === 'createclub' && <CreateClubScreen {...sharedProps} />}
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} onSuccess={() => setAuthOpen(false)} />}
     </>
   );

@@ -40,6 +40,9 @@ function normalizeDbEvent(row, joinCount = 0) {
     registration_deadline:row.registration_deadline|| null,
     entry_fee:            row.entry_fee            || null,
     event_website:        row.event_website        || null,
+    // Club fields
+    hosting_club_id:      row.hosting_club_id      || null,
+    is_members_only:      !!row.is_members_only,
     _fromDb: true,
   };
 }
